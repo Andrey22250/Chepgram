@@ -1,63 +1,85 @@
-#include "Database.h"
+#include "database.h"
 #include <iostream>
-#include <ctime>
 
-Database::Database(const std::string& conninfo) {
-    conn = PQconnectdb(conninfo.c_str());
-    if (PQstatus(conn) != CONNECTION_OK) {
-        std::cerr << "Соединение с базой данных провалено: " << PQerrorMessage(conn);
-        PQfinish(conn);
-        conn = nullptr;
-    }
-}
+Database::Database() : conn(nullptr) {}
 
 Database::~Database() {
-    if (conn) PQfinish(conn);
+    if (conn) {
+        PQfinish(conn);
+    }
 }
 
-bool Database::isConnected() const {
-    return conn != nullptr && PQstatus(conn) == CONNECTION_OK;
+bool Database::connect() {
+    conn = PQconnectdb("host=localhost dbname=chepgram user=postgres password=24071977F_x");
+    if (PQstatus(conn) != CONNECTION_OK) {
+        std::cerr << "Ошибка подключения к БД: " << PQerrorMessage(conn);
+        return false;
+    }
+    return true;
 }
 
-std::optional<int> Database::authenticateUser(const std::string& phone, const std::string& password) {
-    if (!conn) return std::nullopt;
+std::pair<bool, std::string> Database::checkPhoneExists(const std::string& phone) {
+    std::string query = "SELECT id FROM \"Users\" WHERE phonenumber = '" + phone + "';";
+    PGresult* res = PQexec(conn, query.c_str());
 
-    std::string query = "SELECT id FROM \"Users\" WHERE phonenumber = '" + phone + "' AND password = '" + password + "';";
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        PQclear(res);
+        return { false, "Ошибка при проверке телефона" };
+    }
+
+    if (PQntuples(res) > 0) {
+        std::string userId = PQgetvalue(res, 0, 0);
+        PQclear(res);
+        return { true, userId };  // пользователь найден
+    }
+
+    PQclear(res);
+    return { false, "NEW" }; // нет такого номера
+}
+
+std::pair<bool, std::string> Database::verifyPassword(int userId, const std::string& password) {
+    std::string query = "SELECT password, nickname FROM \"Users\" WHERE id = " + std::to_string(userId) + ";";
     PGresult* res = PQexec(conn, query.c_str());
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
         PQclear(res);
-        return std::nullopt;
+        return { false, "Ошибка при проверке пароля" };
     }
 
-    int userId = std::stoi(PQgetvalue(res, 0, 0));
+    std::string dbPassword = PQgetvalue(res, 0, 0);
+    std::string nickname = PQgetvalue(res, 0, 1);
     PQclear(res);
-    return userId;
+
+    if (dbPassword == password) {
+        return { true, "Успешный вход. Ник: " + nickname };
+    }
+    else {
+        return { false, "Неверный пароль" };
+    }
 }
 
-std::string Database::getNickname(int userId)
-{
-    std::string query = "SELECT nickname FROM \"Users\" WHERE id = " + std::to_string(userId) + ";";
-    PGresult* res = PQexec(conn, query.c_str());
+std::pair<bool, std::string> Database::registerNewUser(const std::string& phone, const std::string& password, const std::string& nickname) {
+    // Проверка ника
+    std::string checkNickQuery = "SELECT id FROM \"Users\" WHERE nickname = '" + nickname + "';";
+    PGresult* nickRes = PQexec(conn, checkNickQuery.c_str());
 
-    if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
-        PQclear(res);
-        return "";
+    if (PQntuples(nickRes) > 0) {
+        PQclear(nickRes);
+        return { false, "Это имя пользователя уже занято. Введите новое: " };
+    }
+    PQclear(nickRes);
+
+    std::string insertQuery = "INSERT INTO \"Users\" (nickname, phonenumber, password) "
+        "VALUES ('" + nickname + "', '" + phone + "', '" + password + "') RETURNING id;";
+    PGresult* insertRes = PQexec(conn, insertQuery.c_str());
+
+    if (PQresultStatus(insertRes) != PGRES_TUPLES_OK || PQntuples(insertRes) == 0) {
+        std::string err = PQresultErrorMessage(insertRes);
+        PQclear(insertRes);
+        return { false, "Ошибка регистрации: " + err };
     }
 
-    std::string nickname = PQgetvalue(res, 0, 0);
-    PQclear(res);
-    return nickname;
-}
-
-bool Database::sendMessage(int senderId, int chatId, const std::string& content) {
-    if (!conn) return false;
-
-    std::string query = "INSERT INTO \"Messages\" (content, senter, chats_id, timestamp) VALUES ('" +
-        content + "', " + std::to_string(senderId) + ", " + std::to_string(chatId) + ", now());";
-
-    PGresult* res = PQexec(conn, query.c_str());
-    bool success = PQresultStatus(res) == PGRES_COMMAND_OK;
-    PQclear(res);
-    return success;
+    std::string newId = PQgetvalue(insertRes, 0, 0);
+    PQclear(insertRes);
+    return { true, "Ваш телефон= " + phone + ", ваше имя пользователя= " + nickname + " (зарегистрирован)" };
 }

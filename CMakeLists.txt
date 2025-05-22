@@ -24,6 +24,7 @@ project ("Chepgram")
 
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable (Chepgram "Chepgram.cpp" "Chepgram.h" "src/db/Database.h" "src/db/Database.cpp")
+add_executable (Chepgram_Client "src/client/client.cpp"  "src/client/client.h")
 
 target_link_libraries(Chepgram
 	libpq

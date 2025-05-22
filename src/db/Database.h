@@ -1,22 +1,16 @@
 #pragma once
-#include <libpq-fe.h>
 #include <string>
-#include <optional>
+#include <libpq-fe.h>
 
 class Database {
 public:
-    Database(const std::string& conninfo);
+    Database();
     ~Database();
 
-    bool isConnected() const;
-
-    // Аутентификация
-    std::optional<int> authenticateUser(const std::string& phone, const std::string& password);
-    // Получение никнейма
-    std::string getNickname(int userIdOpt);
-    // Отправка сообщения
-    bool sendMessage(int senderId, int chatId, const std::string& content);
-
+    bool connect();
+    std::pair<bool, std::string> checkPhoneExists(const std::string& phone);
+    std::pair<bool, std::string> verifyPassword(int userId, const std::string& password);
+    std::pair<bool, std::string> registerNewUser(const std::string& phone, const std::string& password, const std::string& nickname);
 private:
     PGconn* conn;
 };
