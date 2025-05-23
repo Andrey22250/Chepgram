@@ -1,6 +1,5 @@
 #include "client.h"
 
-
 using boost::asio::ip::tcp;
 
 void send_message(tcp::socket& socket, const std::string& message)
@@ -26,7 +25,7 @@ void Authorization(tcp::socket& socket)
     std::string response = read_response(socket);
     if (response == "NEW")
     {
-        std::cout << "Создание аккаунта. Введите пароль:";
+        std::cout << "Создание аккаунта. Введите пароль: ";
         std::string password;
         std::getline(std::cin, password);
         send_message(socket, password);
@@ -36,15 +35,31 @@ void Authorization(tcp::socket& socket)
         std::getline(std::cin, nickname);
         send_message(socket, nickname);
 
-        std::cout << read_response(socket);
+        if (read_response(socket) == "Это имя пользователя уже занято. Введите новое: ")
+        {
+            do {
+                std::cout << "Это имя пользователя уже занято. Введите новое: ";
+                std::getline(std::cin, nickname);
+                send_message(socket, nickname);
+            } while (read_response(socket) != "Это имя пользователя уже занято. Введите новое: ");
+        }
+        else std::cout << read_response(socket);
     }
     else
     {
-        std::cout << "Введите пароль:";
+        std::cout << "Введите пароль: ";
         std::string password;
         std::getline(std::cin, password);
         send_message(socket, password);
-        std::cout << read_response(socket);
+        if (read_response(socket) == "Неверный пароль")
+        {
+            do {
+                std::cout << "Неверный пароль. Повторите попытку ввода: ";
+                std::getline(std::cin, password);
+                send_message(socket, password);
+            } while (read_response(socket) != "Неверный пароль");
+        }
+        else std::cout << read_response(socket);
     }
 }
 
