@@ -9,9 +9,6 @@ if (POLICY CMP0141)
   set(CMAKE_MSVC_DEBUG_INFORMATION_FORMAT "$<IF:$<AND:$<C_COMPILER_ID:MSVC>,$<CXX_COMPILER_ID:MSVC>>,$<$<CONFIG:Debug,RelWithDebInfo>:EditAndContinue>,$<$<CONFIG:Debug,RelWithDebInfo>:ProgramDatabase>>")
 endif()
 
-find_package(wxWidgets REQUIRED COMPONENTS net core base)
-include(${wxWidgets_USE_FILE})
-
 set(POSTGRESQL_INCLUDE_DIR "D:/17/include")
 set(POSTGRESQL_LIBRARY_DIR "D:/17/lib")
 include_directories(
