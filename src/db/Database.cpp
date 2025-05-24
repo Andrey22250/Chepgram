@@ -189,3 +189,77 @@ std::pair<bool, std::string> Database::createChatWithUser(int currentUserId, con
 
     return { true, "OK: Создан чат с пользователем " + nickname };
 }
+
+std::tuple<bool, std::string, int> Database::getChatIdWithUser(int user_id, const std::string& peer_nickname) {
+    std::string query = "SELECT id FROM \"Users\" WHERE nickname = '" + peer_nickname + "';";
+    PGresult* res = PQexec(conn, query.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
+        PQclear(res);
+        return { false, "Пользователь не найден", -1 };
+    }
+    int peer_id = std::stoi(PQgetvalue(res, 0, 0));
+    PQclear(res);
+
+    query =
+        "SELECT uc1.chat_id "
+        "FROM \"Users_Chats\" uc1 "
+        "JOIN \"Users_Chats\" uc2 ON uc1.chat_id = uc2.chat_id "
+        "WHERE uc1.user_id = " + std::to_string(user_id) + " AND uc2.user_id = " + std::to_string(peer_id) + " "
+        "LIMIT 1;";
+    res = PQexec(conn, query.c_str());
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
+        PQclear(res);
+        return { false, "Чат с данным пользователем не найден", -1 };
+    }
+
+    int chat_id = std::stoi(PQgetvalue(res, 0, 0));
+    PQclear(res);
+    return { true, "OK", chat_id };
+}
+
+bool Database::sendMessage(int chat_id, int sender_id, const std::string& content) {
+    std::string query =
+        "INSERT INTO \"Messages\" (chats_id, sender, content, timestamp) VALUES (" +
+        std::to_string(chat_id) + ", " + std::to_string(sender_id) + ", '" + content + "', 'NOW');";
+    PGresult* res = PQexec(conn, query.c_str());
+
+    bool success = PQresultStatus(res) == PGRES_COMMAND_OK;
+    PQclear(res);
+    if (!success) return false;
+    return success;
+}
+
+std::string Database::getMessagesForChat(int chatId) {
+    std::string result;
+
+    std::string query =
+        "SELECT nickname, content, timestamp AT TIME ZONE 'Asia/Barnaul' FROM ("
+        "   SELECT u.nickname, m.content, m.timestamp "
+        "   FROM \"Messages\" m "
+        "   JOIN \"Users\" u ON m.sender = u.id "
+        "   WHERE m.chats_id = " + std::to_string(chatId) + " "
+        "   ORDER BY m.timestamp DESC "
+        "   LIMIT 78"
+        ") sub "
+        "ORDER BY timestamp ASC;";
+
+    PGresult* res = PQexec(conn, query.c_str());
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        PQclear(res);
+        return "ERROR Не удалось получить сообщения";
+    }
+
+    int rows = PQntuples(res);
+    for (int i = 0; i < rows; ++i) {
+        std::string nickname = PQgetvalue(res, i, 0);
+        std::string content = PQgetvalue(res, i, 1);
+        std::string timestamp = PQgetvalue(res, i, 2);
+
+        result += "[" + timestamp + "] " + nickname + ": " + content + "\n";
+    }
+
+    PQclear(res);
+    return result.empty() ? "Нет сообщений" : result;
+}

@@ -42,7 +42,8 @@ void authorization(tcp::socket& socket)
                 std::cout << "Это имя пользователя уже занято. Введите новое: ";
                 std::getline(std::cin, nickname);
                 send_message(socket, nickname);
-            } while (read_response(socket) != "Это имя пользователя уже занято. Введите новое: ");
+                message = read_response(socket);
+            } while (message == "Это имя пользователя уже занято. Введите новое: ");
         }
     }
     else
@@ -58,7 +59,8 @@ void authorization(tcp::socket& socket)
                 std::cout << "Неверный пароль. Повторите попытку ввода: ";
                 std::getline(std::cin, password);
                 send_message(socket, password);
-            } while (read_response(socket) != "Неверный пароль");
+                message = read_response(socket);
+            } while (message == "Неверный пароль");
         }
     }
     std::cout << message << std::endl;
@@ -102,6 +104,49 @@ void createChat(tcp::socket& socket) {
     std::cout << message << std::endl;
 }
 
+int openChat(tcp::socket& socket) {
+    int chatID = -1;
+    std::cout << "Введите никнейм собеседника: ";
+    std::string peer;
+    std::getline(std::cin, peer);
+
+    std::string command = "OPEN CHAT " + peer;
+    send_message(socket, command);
+
+    std::string response = read_response(socket);
+    if (response.starts_with("OK ")) {
+        chatID = std::stoi(response.substr(3));
+        std::cout << "Чат открыт." << "\n";
+    }
+    else {
+        std::cout << "Ошибка: " << response.substr(6) << "\n";
+    }
+    return chatID;
+}
+
+void getChatStory(tcp::socket& socket, int chatID) {
+    send_message(socket, "GET MESSAGES " + std::to_string(chatID));
+    std::string messages = read_response(socket);
+    std::cout << "История чата:\n" << messages << "\n";
+}
+
+void sendMsgToUser(tcp::socket& socket, int chat_id) {
+    std::cout << "Введите сообщение: ";
+    std::string message;
+    std::getline(std::cin, message);
+
+    std::string command = "SEND_MESSAGE " + std::to_string(chat_id) + "\n" + message;
+    send_message(socket, command);
+
+    std::string response = read_response(socket);
+    if (response == "OK") {
+        std::cout << "Сообщение отправлено" << std::endl;
+    }
+    else {
+        std::cout << "Ошибка: " << response.substr(6) << std::endl;
+    }
+}
+
 int main() {
 #ifdef _WIN32
     SetConsoleCP(1251); // Установка кодировки консоли
@@ -111,15 +156,17 @@ int main() {
         boost::asio::io_context io_context;
 
         tcp::resolver resolver(io_context);
-        auto endpoints = resolver.resolve("127.0.0.1", "12345");
+        auto endpoints = resolver.resolve("79.136.138.121", "12345");
 
         tcp::socket socket(io_context);
         boost::asio::connect(socket, endpoints);
         
         authorization(socket);
         getChats(socket);
-        createChat(socket);
-        while (true);
+        /*createChat(socket);*/
+        int chatID = openChat(socket);
+        getChatStory(socket, chatID);
+        while (true) sendMsgToUser(socket, chatID);
     }
     catch (std::exception& e) {
         std::cerr << "Ошибка: " << e.what() << "\n";

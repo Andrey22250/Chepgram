@@ -25,6 +25,9 @@ public:
     //Работа с чатами
     std::vector<ChatsInfo> getUserChatsAndNames(int userID);
     std::pair<bool, std::string> createChatWithUser(int currentUserId, const std::string& nickname);
+    std::tuple<bool, std::string, int> getChatIdWithUser(int user_id, const std::string& peer_nickname);
+    bool sendMessage(int chat_id, int sender_id, const std::string& content);
+    std::string getMessagesForChat(int chatId);
 private:
     PGconn* conn;
 };

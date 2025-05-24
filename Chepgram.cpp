@@ -29,7 +29,6 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
         auto nickname = co_await read_response(socket);
         std::cout << "Получено: " << nickname << "\n";
         auto [ok2, finalname, newID] = db.registerNewUser(phone, password, nickname);
-        std::cout << "Получено: " << finalname << "\n";
         if (!ok2)
             do {
                 co_await send_message(socket, finalname);
@@ -37,6 +36,7 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
                 std::cout << "Получено: " << nickname << "\n";
                 auto [ok2, finalname, newID] = db.registerNewUser(phone, password, nickname);
                 std::cout << "Получено: " << finalname << "\n";
+                co_await send_message(socket, finalname);
             } while (ok2);
         else {
             co_await send_message(socket, finalname);
@@ -56,6 +56,7 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
                 std::cout << "Получено: " << password << "\n";
                 auto [ok2, finalname] = db.verifyPassword(std::stoi(response), password);
                 std::cout << "Получено: " << finalname << "\n";
+                co_await send_message(socket, finalname);
             } while (ok3);
         else {
             co_await send_message(socket, finalname);
@@ -102,6 +103,36 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
             else if (request.starts_with("CREATE CHAT "))
             {
                 co_await createChat(socket, db, request, userID);
+            }
+            else if (request.starts_with("OPEN CHAT "))
+            {
+                std::string peer_nickname = request.substr(std::string("OPEN CHAT ").length());
+                auto [ok, msg, chat_id] = db.getChatIdWithUser(userID, peer_nickname);
+                if (ok) {
+                    co_await send_message(socket, "OK " + std::to_string(chat_id));
+                }
+                else {
+                    co_await send_message(socket, "ERROR " + msg);
+                }
+            }
+            else if(request.starts_with("SEND_MESSAGE ")) {
+                // Формат: SEND_MESSAGE <chat_id>\n<сообщение>
+                size_t newline_pos = request.find('\n');
+                int chat_id = std::stoi(request.substr(13, newline_pos - 13));
+                std::string content = request.substr(newline_pos + 1);
+
+                bool ok = db.sendMessage(chat_id, userID, content);
+                if (ok) {
+                    co_await send_message(socket, "OK");
+                }
+                else {
+                    co_await send_message(socket, "ERROR Не удалось отправить сообщение");
+                }
+            }
+            else if (request.starts_with("GET MESSAGES ")) {
+                int chatId = std::stoi(request.substr(std::string("GET MESSAGES ").length()));
+                std::string messages = db.getMessagesForChat(chatId);
+                co_await send_message(socket, messages);
             }
             else {
                 co_await send_message(socket, "UNKNOWN COMMAND\n");
