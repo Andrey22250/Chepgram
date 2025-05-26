@@ -30,6 +30,8 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
         std::cout << "Получено: " << nickname << "\n";
         auto [ok2, finalname, newID] = db.registerNewUser(phone, password, nickname);
         if (!ok2)
+        {
+            std::cout << "Получено: " << finalname << "\n";
             do {
                 co_await send_message(socket, finalname);
                 auto nickname = co_await read_response(socket);
@@ -37,7 +39,8 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
                 auto [ok2, finalname, newID] = db.registerNewUser(phone, password, nickname);
                 std::cout << "Получено: " << finalname << "\n";
                 co_await send_message(socket, finalname);
-            } while (ok2);
+            } while (!ok2);
+        }
         else {
             co_await send_message(socket, finalname);
             std::cout << "Получено: " << finalname << "\n";
@@ -50,14 +53,17 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
         std::cout << "Получено: " << password << "\n";
         auto [ok3, finalname] = db.verifyPassword(std::stoi(response), password);
         if (!ok3)
+        {
+            std::cout << "Получено: " << finalname << "\n";
             do {
                 co_await send_message(socket, finalname);
-                auto password = co_await read_response(socket);
+                password = co_await read_response(socket);
                 std::cout << "Получено: " << password << "\n";
-                auto [ok2, finalname] = db.verifyPassword(std::stoi(response), password);
+                auto [ok3, finalname] = db.verifyPassword(std::stoi(response), password);
                 std::cout << "Получено: " << finalname << "\n";
                 co_await send_message(socket, finalname);
-            } while (ok3);
+            } while (!ok3);
+        }
         else {
             co_await send_message(socket, finalname);
             std::cout << "Получено: " << finalname << "\n";

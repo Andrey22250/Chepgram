@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="Client" />
+		<Option pch_mode="2" />
+		<Option compiler="msvc17" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/Client" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="0" />
+				<Option compiler="msvc17" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="/Zi" />
+					<Add option="/D_DEBUG" />
+					<Add option="/D__WXDEBUG__" />
+					<Add directory="E:/wxWidgets/lib/vc_lib/mswud" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="E:/wxWidgets/lib/vc_lib/mswud" />
+				</ResourceCompiler>
+				<Linker>
+					<Add option="/DEBUG" />
+					<Add library="wxmsw32ud.lib" />
+					<Add library="wxpngd.lib" />
+					<Add library="wxjpegd.lib" />
+					<Add library="wxtiffd.lib" />
+					<Add library="wxzlibd.lib" />
+					<Add library="wxregexud.lib" />
+					<Add library="wxscintillad.lib" />
+					<Add library="wxexpatd.lib" />
+					<Add directory="E:/wxWidgets/lib/vc_lib" />
+				</Linker>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/Client" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="msvc17" />
+				<Option projectLinkerOptionsRelation="2" />
+				<Compiler>
+					<Add option="/Og" />
+					<Add option="/Ox" />
+					<Add option="/DNDEBUG" />
+					<Add directory="E:/wxWidgets/lib/vc_lib/mswu" />
+				</Compiler>
+				<ResourceCompiler>
+					<Add directory="E:/wxWidgets/lib/vc_lib/mswu" />
+				</ResourceCompiler>
+				<Linker>
+					<Add library="wxmsw32u.lib" />
+					<Add library="wxpng.lib" />
+					<Add library="wxjpeg.lib" />
+					<Add library="wxtiff.lib" />
+					<Add library="wxzlib.lib" />
+					<Add library="wxregexu.lib" />
+					<Add library="wxscintilla.lib" />
+					<Add library="wxexpat.lib" />
+					<Add directory="E:/wxWidgets/lib/vc_lib" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="/DWIN32" />
+			<Add option="/D__WIN32__" />
+			<Add option="/D__WXMSW__" />
+			<Add option="/DwxUSE_UNICODE" />
+			<Add option="/D_WINDOWS" />
+			<Add option="/W3" />
+			<Add directory="E:/wxWidgets/include" />
+		</Compiler>
+		<ResourceCompiler>
+			<Add directory="E:/wxWidgets/include" />
+		</ResourceCompiler>
+		<Linker>
+			<Add option="/INCREMENTAL:NO" />
+			<Add library="kernel32.lib" />
+			<Add library="user32.lib" />
+			<Add library="gdi32.lib" />
+			<Add library="winspool.lib" />
+			<Add library="comdlg32.lib" />
+			<Add library="advapi32.lib" />
+			<Add library="shell32.lib" />
+			<Add library="ole32.lib" />
+			<Add library="oleaut32.lib" />
+			<Add library="uuid.lib" />
+			<Add library="comctl32.lib" />
+			<Add library="wsock32.lib" />
+		</Linker>
+		<Unit filename="Authorization.cpp" />
+		<Unit filename="Authorization.h" />
+		<Unit filename="ClientApp.cpp" />
+		<Unit filename="ClientApp.h" />
+		<Unit filename="ClientMain.cpp" />
+		<Unit filename="ClientMain.h" />
+		<Unit filename="resource.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
+		<Unit filename="wxsmith/Authorization.wxs" />
+		<Unit filename="wxsmith/Clientframe.wxs" />
+		<Extensions>
+			<lib_finder disable_auto="1" />
+			<wxsmith version="1">
+				<gui name="wxWidgets" src="ClientApp.cpp" main="ClientFrame" init_handlers="necessary" language="CPP" />
+				<resources>
+					<wxFrame wxs="wxsmith/Clientframe.wxs" src="ClientMain.cpp" hdr="ClientMain.h" fwddecl="0" i18n="1" name="ClientFrame" language="CPP" />
+					<wxFrame wxs="wxsmith/Authorization.wxs" src="Authorization.cpp" hdr="Authorization.h" fwddecl="0" i18n="1" name="Authorization" language="CPP" />
+				</resources>
+			</wxsmith>
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>

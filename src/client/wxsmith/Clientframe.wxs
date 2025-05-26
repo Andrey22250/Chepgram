@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<wxsmith>
+	<object class="wxFrame" name="ClientFrame">
+		<centered>1</centered>
+		<size>1440,720</size>
+		<bg>#202020</bg>
+		<help>Password</help>
+		<id_arg>0</id_arg>
+		<style>wxBORDER_SIMPLE</style>
+		<handler function="OnActivate" entry="EVT_ACTIVATE" />
+		<object class="wxPanel" name="ID_PANEL1" variable="Panel1" member="yes">
+			<pos>1,0</pos>
+			<size>1440,28</size>
+			<fg>#202020</fg>
+			<bg>#232323</bg>
+			<style>wxTAB_TRAVERSAL|wxCLIP_CHILDREN</style>
+			<handler function="OnPanel1LeftDown" entry="EVT_LEFT_DOWN" />
+			<handler function="OnPanel1LeftUp" entry="EVT_LEFT_UP" />
+			<handler function="OnPanel1MouseMove" entry="EVT_MOTION" />
+			<object class="wxButton" name="ID_BUTTON3" variable="minButton" member="yes">
+				<label>__</label>
+				<pos>1360,0</pos>
+				<size>40,25</size>
+				<fg>wxSYS_COLOUR_WINDOW</fg>
+				<bg>#2D2D2D</bg>
+				<style>wxBORDER_NONE</style>
+				<handler function="OnminButtonClick" entry="EVT_BUTTON" />
+			</object>
+			<object class="wxButton" name="ID_BUTTON2" variable="CloseButton" member="yes">
+				<label>X</label>
+				<pos>1400,0</pos>
+				<size>40,25</size>
+				<fg>wxSYS_COLOUR_WINDOW</fg>
+				<bg>#2D2D2D</bg>
+				<style>wxBORDER_NONE</style>
+				<handler function="OnCloseButtonClick" entry="EVT_BUTTON" />
+			</object>
+			<object class="wxStaticText" name="ID_STATICTEXT1" variable="LabelMain" member="yes">
+				<label>Chepgram</label>
+				<pos>1,5</pos>
+				<size>70,25</size>
+				<fg>wxSYS_COLOUR_WINDOW</fg>
+				<extra_code>LabelMain-&gt;SetFont(font);&#x0A;</extra_code>
+				<style>wxALIGN_CENTRE</style>
+			</object>
+		</object>
+		<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
+			<pos>1500,488</pos>
+			<object class="wxBoxSizer" variable="FakeBoxSizer" member="no" />
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT2" variable="AuthText" member="yes">
+			<label>Авторизация</label>
+			<pos>0,160</pos>
+			<size>1440,16</size>
+			<fg>wxSYS_COLOUR_WINDOW</fg>
+			<extra_code>wxFont authfont(32, wxFONTFAMILY__DEFAULT, wxFONTSTYLE__NORMAL, wxFONTWEIGHT__BOLD);&#x0A;AuthText-&gt;SetFont(authfont);</extra_code>
+			<style>wxALIGN_CENTRE</style>
+		</object>
+		<object class="wxStaticText" name="ID_STATICTEXT3" variable="PhoneNumText" member="yes">
+			<label>Введите номер телефона:</label>
+			<pos>472,280</pos>
+			<size>512,32</size>
+			<fg>wxSYS_COLOUR_WINDOW</fg>
+			<extra_code>wxFont phonefont(24, wxFONTFAMILY__DEFAULT, wxFONTSTYLE__NORMAL, wxFONTWEIGHT__BOLD);&#x0A;PhoneNumText-&gt;SetFont(phonefont);</extra_code>
+			<style>wxALIGN_CENTRE</style>
+		</object>
+		<object class="wxTextCtrl" name="ID_TEXTCTRL1" variable="PhoneCtrl" member="yes">
+			<maxlength>12</maxlength>
+			<pos>584,352</pos>
+			<size>264,48</size>
+			<fg>wxSYS_COLOUR_WINDOW</fg>
+			<bg>#282828</bg>
+			<font>
+				<size>28</size>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<family>default</family>
+				<face>Roboto Condensed</face>
+			</font>
+			<help>+79000000000</help>
+			<style>wxTE_CENTRE|wxBORDER_NONE</style>
+			<handler function="OnPhoneCtrlText" entry="EVT_TEXT" />
+		</object>
+		<object class="wxButton" name="ID_BUTTON1" variable="AuthBut" member="yes">
+			<label>-&gt;</label>
+			<pos>856,360</pos>
+			<size>40,32</size>
+			<enabled>0</enabled>
+			<fg>#FFFFFF</fg>
+			<bg>#004080</bg>
+			<style>wxBORDER_NONE</style>
+			<handler function="OnNextButClick" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxButton" name="ID_BUTTON4" variable="PswdBut" member="yes">
+			<label>-&gt;</label>
+			<pos>856,360</pos>
+			<size>40,32</size>
+			<enabled>0</enabled>
+			<hidden>1</hidden>
+			<fg>#FFFFFF</fg>
+			<bg>#004080</bg>
+			<style>wxBORDER_NONE</style>
+			<handler function="OnPswdButClick" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="PswdCtrl" member="yes">
+			<maxlength>12</maxlength>
+			<pos>584,352</pos>
+			<size>264,48</size>
+			<hidden>1</hidden>
+			<fg>wxSYS_COLOUR_WINDOW</fg>
+			<bg>#282828</bg>
+			<font>
+				<size>22</size>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<family>default</family>
+				<face>Roboto Condensed</face>
+			</font>
+			<help>+79000000000</help>
+			<style>wxTE_PASSWORD|wxTE_CENTRE|wxBORDER_NONE</style>
+			<handler function="OnPswdCtrlText" entry="EVT_TEXT" />
+		</object>
+	</object>
+</wxsmith>

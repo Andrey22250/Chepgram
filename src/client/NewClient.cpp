@@ -1,4 +1,5 @@
 #include <wx/wx.h>
+#include <boost/asio.hpp>
 #include "MainFrame.h"
 
 class ChatApp : public wxApp {
