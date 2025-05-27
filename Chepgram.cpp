@@ -28,18 +28,19 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
         std::cout << "Получено: " << password << "\n";
         auto nickname = co_await read_response(socket);
         std::cout << "Получено: " << nickname << "\n";
-        auto [ok2, finalname, newID] = db.registerNewUser(phone, password, nickname);
-        if (!ok2)
+        auto [ok, finalname, newID] = db.registerNewUser(phone, password, nickname);
+        if (!ok)
         {
             std::cout << "Получено: " << finalname << "\n";
+            co_await send_message(socket, finalname);
             do {
-                co_await send_message(socket, finalname);
                 auto nickname = co_await read_response(socket);
                 std::cout << "Получено: " << nickname << "\n";
-                auto [ok2, finalname, newID] = db.registerNewUser(phone, password, nickname);
+                auto [ok1, finalname, newID] = db.registerNewUser(phone, password, nickname);
+                ok = ok1;
                 std::cout << "Получено: " << finalname << "\n";
                 co_await send_message(socket, finalname);
-            } while (!ok2);
+            } while (!ok);
         }
         else {
             co_await send_message(socket, finalname);
@@ -51,18 +52,19 @@ awaitable<int> auth(tcp::socket& socket, Database& db, const std::string& reques
         userID = std::stoi(response);
         auto password = co_await read_response(socket);
         std::cout << "Получено: " << password << "\n";
-        auto [ok3, finalname] = db.verifyPassword(std::stoi(response), password);
-        if (!ok3)
+        auto [ok, finalname] = db.verifyPassword(std::stoi(response), password);
+        if (!ok)
         {
             std::cout << "Получено: " << finalname << "\n";
+            co_await send_message(socket, finalname);
             do {
-                co_await send_message(socket, finalname);
                 password = co_await read_response(socket);
                 std::cout << "Получено: " << password << "\n";
-                auto [ok3, finalname] = db.verifyPassword(std::stoi(response), password);
+                auto [ok1, finalname] = db.verifyPassword(std::stoi(response), password);
                 std::cout << "Получено: " << finalname << "\n";
+                ok = ok1;
                 co_await send_message(socket, finalname);
-            } while (!ok3);
+            } while (!ok);
         }
         else {
             co_await send_message(socket, finalname);

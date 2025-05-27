@@ -6,14 +6,14 @@
 		<bg>#202020</bg>
 		<help>Password</help>
 		<id_arg>0</id_arg>
-		<style>wxBORDER_SIMPLE</style>
+		<style>wxBORDER_NONE</style>
 		<handler function="OnActivate" entry="EVT_ACTIVATE" />
 		<object class="wxPanel" name="ID_PANEL1" variable="Panel1" member="yes">
-			<pos>1,0</pos>
+			<pos>0,0</pos>
 			<size>1440,28</size>
 			<fg>#202020</fg>
 			<bg>#232323</bg>
-			<style>wxTAB_TRAVERSAL|wxCLIP_CHILDREN</style>
+			<style>wxBORDER_NONE|wxCLIP_CHILDREN</style>
 			<handler function="OnPanel1LeftDown" entry="EVT_LEFT_DOWN" />
 			<handler function="OnPanel1LeftUp" entry="EVT_LEFT_UP" />
 			<handler function="OnPanel1MouseMove" entry="EVT_MOTION" />
@@ -44,10 +44,6 @@
 				<style>wxALIGN_CENTRE</style>
 			</object>
 		</object>
-		<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
-			<pos>1500,488</pos>
-			<object class="wxBoxSizer" variable="FakeBoxSizer" member="no" />
-		</object>
 		<object class="wxStaticText" name="ID_STATICTEXT2" variable="AuthText" member="yes">
 			<label>Авторизация</label>
 			<pos>0,160</pos>
@@ -76,7 +72,7 @@
 				<weight>normal</weight>
 				<underlined>0</underlined>
 				<family>default</family>
-				<face>Roboto Condensed</face>
+				<face>Roboto</face>
 			</font>
 			<help>+79000000000</help>
 			<style>wxTE_CENTRE|wxBORDER_NONE</style>
@@ -116,11 +112,95 @@
 				<weight>normal</weight>
 				<underlined>0</underlined>
 				<family>default</family>
-				<face>Roboto Condensed</face>
+				<face>Roboto</face>
 			</font>
 			<help>+79000000000</help>
-			<style>wxTE_PASSWORD|wxTE_CENTRE|wxBORDER_NONE</style>
+			<style>wxTE_PASSWORD|wxTE_LEFT|wxBORDER_NONE</style>
 			<handler function="OnPswdCtrlText" entry="EVT_TEXT" />
+		</object>
+		<object class="wxTextCtrl" name="ID_TEXTCTRL3" variable="NickCtrl" member="yes">
+			<maxlength>12</maxlength>
+			<pos>584,352</pos>
+			<size>264,48</size>
+			<hidden>1</hidden>
+			<fg>wxSYS_COLOUR_WINDOW</fg>
+			<bg>#282828</bg>
+			<font>
+				<size>22</size>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<family>default</family>
+				<face>Roboto</face>
+			</font>
+			<help>+79000000000</help>
+			<style>wxTE_LEFT|wxTE_CENTRE|wxBORDER_NONE</style>
+			<handler function="OnNickCtrlText" entry="EVT_TEXT" />
+		</object>
+		<object class="wxButton" name="ID_BUTTON5" variable="NickBut" member="yes">
+			<label>-&gt;</label>
+			<pos>856,360</pos>
+			<size>40,32</size>
+			<enabled>0</enabled>
+			<hidden>1</hidden>
+			<fg>#FFFFFF</fg>
+			<bg>#004080</bg>
+			<style>wxBORDER_NONE</style>
+			<handler function="OnNickButClick" entry="EVT_BUTTON" />
+		</object>
+		<object class="wxListCtrl" name="ID_LISTCTRL1" variable="chatListCtrl" member="yes">
+			<pos>8,32</pos>
+			<size>328,688</size>
+			<hidden>1</hidden>
+			<fg>#FFFFFF</fg>
+			<bg>#141414</bg>
+			<font>
+				<size>14</size>
+				<style>normal</style>
+				<weight>normal</weight>
+				<underlined>0</underlined>
+				<family>default</family>
+				<face>Roboto</face>
+			</font>
+			<style>wxLC_REPORT|wxLC_NO_HEADER|wxLC_SINGLE_SEL|wxBORDER_NONE</style>
+			<handler function="OnchatListCtrlBeginDrag" entry="EVT_LIST_BEGIN_DRAG" />
+		</object>
+		<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
+			<pos>344,32</pos>
+			<size>1088,680</size>
+			<hidden>1</hidden>
+			<bg>#1C1C1C</bg>
+			<object class="wxRichTextCtrl" name="ID_RICHTEXTCTRL1" variable="messageArea" member="yes">
+				<value>Text</value>
+				<text_background_colour>#141414</text_background_colour>
+				<pos>1,0</pos>
+				<size>1088,648</size>
+				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+				<bg>#141414</bg>
+				<style>wxRE_MULTILINE|wxBORDER_NONE</style>
+			</object>
+			<object class="wxPanel" name="ID_PANEL3" variable="Panel3" member="yes">
+				<pos>0,656</pos>
+				<size>1088,20</size>
+				<bg>#141414</bg>
+				<object class="wxButton" name="ID_BUTTON6" variable="sendButton" member="yes">
+					<label>-&gt;</label>
+					<pos>1056,0</pos>
+					<size>35,20</size>
+					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+					<bg>#004080</bg>
+					<extra_code>sendButton-&gt;Raise();</extra_code>
+					<style>wxBORDER_NONE</style>
+					<handler function="OnsendButtonClick" entry="EVT_BUTTON" />
+				</object>
+				<object class="wxTextCtrl" name="ID_TEXTCTRL4" variable="inputField" member="yes">
+					<maxlength>5000</maxlength>
+					<size>1048,23</size>
+					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+					<bg>#141414</bg>
+					<style>wxTE_PROCESS_ENTER|wxBORDER_NONE</style>
+				</object>
+			</object>
 		</object>
 	</object>
 </wxsmith>

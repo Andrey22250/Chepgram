@@ -3,6 +3,7 @@
 
 //(*Headers(Authorization)
 #include <wx/frame.h>
+#include <wx/sizer.h>
 //*)
 
 class Authorization: public wxFrame

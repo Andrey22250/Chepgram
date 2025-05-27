@@ -16,7 +16,14 @@ END_EVENT_TABLE()
 Authorization::Authorization(wxWindow* parent,wxWindowID id)
 {
     //(*Initialize(Authorization)
+    wxBoxSizer* BoxSizer1;
+
     Create(parent, id, wxEmptyString, wxDefaultPosition, wxDefaultSize, wxDEFAULT_FRAME_STYLE, _T("id"));
+    SetClientSize(wxSize(1052,519));
+    Move(wxPoint(-1,-1));
+    BoxSizer1 = new wxBoxSizer(wxHORIZONTAL);
+    SetSizer(BoxSizer1);
+    Layout();
     //*)
 }
 

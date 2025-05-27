@@ -40,7 +40,7 @@ std::pair<bool, std::string> Database::verifyPassword(int userId, const std::str
 
     if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
         PQclear(res);
-        return { false, "Ошибка при проверке пароля" };
+        return { false, "1Wrong" };
     }
 
     std::string dbPassword = PQgetvalue(res, 0, 0);
@@ -51,7 +51,7 @@ std::pair<bool, std::string> Database::verifyPassword(int userId, const std::str
         return { true, "Успешный вход. Ник: " + nickname };
     }
     else {
-        return { false, "Неверный пароль" };
+        return { false, "1Wrong" };
     }
 }
 
@@ -62,7 +62,7 @@ std::tuple<bool, std::string, int> Database::registerNewUser(const std::string& 
 
     if (PQntuples(nickRes) > 0) {
         PQclear(nickRes);
-        return { false, "Это имя пользователя уже занято. Введите новое: ", -1 };
+        return { false, "Used", -1 };
     }
     PQclear(nickRes);
 
@@ -73,7 +73,7 @@ std::tuple<bool, std::string, int> Database::registerNewUser(const std::string& 
     if (PQresultStatus(insertRes) != PGRES_TUPLES_OK || PQntuples(insertRes) == 0) {
         std::string err = PQresultErrorMessage(insertRes);
         PQclear(insertRes);
-        return { false, "Ошибка регистрации: " + err, -1 };
+        return { false, "Error" + err, -1 };
     }
 
     std::string newId = PQgetvalue(insertRes, 0, 0);
@@ -84,14 +84,23 @@ std::tuple<bool, std::string, int> Database::registerNewUser(const std::string& 
 std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
     std::vector<ChatsInfo> chats;
 
-    std::string query = "SELECT uc.chat_id, u.nickname, MAX(Ct.last_message) AS last_message_time "
-        "FROM \"Users_Chats\" uc "
-        "JOIN \"Users_Chats\" uc2 ON uc.chat_id = uc2.chat_id AND uc2.user_id != " + std::to_string(userId) + 
-        " JOIN \"Users\" u ON u.id = uc2.user_id "
-        "LEFT JOIN \"Chats\" Ct ON Ct.id = uc.chat_id "
-        "WHERE uc.user_id = " + std::to_string(userId) +
-        " GROUP BY uc.chat_id, u.nickname "
-        "ORDER BY last_message_time DESC NULLS LAST;";
+    std::string query = "SELECT uc.chat_id, u.nickname, "
+      "  CASE "
+      "    WHEN now() - Ct.last_message < INTERVAL '3 days' "
+      "      THEN to_char(Ct.last_message, 'HH24:MI') "
+      "    ELSE to_char(Ct.last_message, 'DD.MM.YYYY') "
+      "  END AS last_message_display "
+      "FROM \"Users_Chats\" uc "
+      "JOIN \"Users_Chats\" uc2 "
+      "  ON uc.chat_id = uc2.chat_id "
+        " AND uc2.user_id != " + std::to_string(userId) +
+        " JOIN \"Users\" u "
+        "  ON u.id = uc2.user_id "
+        "LEFT JOIN \"Chats\" Ct "
+        "  ON Ct.id = uc.chat_id "
+        "WHERE uc.user_id = " + std::to_string(userId) + " "
+        "GROUP BY uc.chat_id, u.nickname, last_message_display "
+        "ORDER BY MAX(Ct.last_message) DESC NULLS LAST;";
 
     PGresult* res = PQexec(conn,query.c_str());
 
