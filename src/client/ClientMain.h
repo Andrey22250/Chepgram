@@ -20,6 +20,8 @@
 #include <wx/textctrl.h>
 //*)
 
+#include <wx/textdlg.h>
+#include <wx/timer.h>
 #include <wx/msgdlg.h>
 #include <iostream>
 #include <string>
@@ -45,8 +47,8 @@ class ClientFrame: public wxFrame
 
         int userID;
         std::vector<int> chatIds_;
+        int activeChatId_ = -1;
         //(*Handlers(ClientFrame)
-        void OnQuit(wxCommandEvent& event);
         void OnCloseButtonClick(wxCommandEvent& event);
         void OnminButtonClick(wxCommandEvent& event);
         void OnActivate(wxActivateEvent& event);
@@ -64,8 +66,10 @@ class ClientFrame: public wxFrame
         void OnNickButClick(wxCommandEvent& event);
         void OnNickCtrlText(wxCommandEvent& event);
         void OnsendButtonClick(wxCommandEvent& event);
-        void OnchatListCtrlBeginDrag(wxListEvent& event);
+        void OnchatListCtrlItemSelect(wxListEvent& event);
+        void OnButton1Click(wxCommandEvent& event);
         //*)
+        void OnTimer1Trigger(wxTimerEvent& event);
         awaitable<void> send_message(const std::string& message);
         awaitable<std::string> read_response();
         awaitable<void> main_session();
@@ -73,6 +77,7 @@ class ClientFrame: public wxFrame
         awaitable<void> Password();
         awaitable<void> Nickname();
         awaitable<void> LoadChats();
+        awaitable<void> AddNewChat();
 
         //(*Identifiers(ClientFrame)
         static const wxWindowID ID_BUTTON3;
@@ -93,9 +98,13 @@ class ClientFrame: public wxFrame
         static const wxWindowID ID_TEXTCTRL4;
         static const wxWindowID ID_PANEL3;
         static const wxWindowID ID_PANEL2;
+        static const wxWindowID ID_BUTTON7;
         //*)
+        static const wxWindowID ID_TEXTENTRYDIALOG1;
+        static const wxWindowID ID_TIMER1;
 
         //(*Declarations(ClientFrame)
+        wxButton* AddChatBut;
         wxButton* AuthBut;
         wxButton* CloseButton;
         wxButton* NickBut;
@@ -115,6 +124,8 @@ class ClientFrame: public wxFrame
         wxTextCtrl* PswdCtrl;
         wxTextCtrl* inputField;
         //*)
+        wxTextEntryDialog* TextEntryDialog1;
+        wxTimer Timer1;
 
         DECLARE_EVENT_TABLE()
 };

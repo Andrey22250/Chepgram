@@ -91,7 +91,7 @@ awaitable<void> getUserChats(tcp::socket& socket, Database& db, int userId)
 
 awaitable<void> createChat(tcp::socket& socket, Database& db, const std::string& request, int userID)
 {
-    std::string nickname = request.substr(std::string("CREATE_CHAT nickname=").length());
+    std::string nickname = request.substr(std::string("CREATE CHAT nickname=").length());
     auto [ok, response] = db.createChatWithUser(userID, nickname);
     co_await send_message(socket, response);
 }
@@ -111,17 +111,6 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
             else if (request.starts_with("CREATE CHAT "))
             {
                 co_await createChat(socket, db, request, userID);
-            }
-            else if (request.starts_with("OPEN CHAT "))
-            {
-                std::string peer_nickname = request.substr(std::string("OPEN CHAT ").length());
-                auto [ok, msg, chat_id] = db.getChatIdWithUser(userID, peer_nickname);
-                if (ok) {
-                    co_await send_message(socket, "OK " + std::to_string(chat_id));
-                }
-                else {
-                    co_await send_message(socket, "ERROR " + msg);
-                }
             }
             else if(request.starts_with("SEND_MESSAGE ")) {
                 // Формат: SEND_MESSAGE <chat_id>\n<сообщение>

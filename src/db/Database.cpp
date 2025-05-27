@@ -86,7 +86,7 @@ std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
 
     std::string query = "SELECT uc.chat_id, u.nickname, "
       "  CASE "
-      "    WHEN now() - Ct.last_message < INTERVAL '3 days' "
+      "    WHEN now() - Ct.last_message < INTERVAL '2 days' "
       "      THEN to_char(Ct.last_message, 'HH24:MI') "
       "    ELSE to_char(Ct.last_message, 'DD.MM.YYYY') "
       "  END AS last_message_display "
@@ -197,34 +197,6 @@ std::pair<bool, std::string> Database::createChatWithUser(int currentUserId, con
     PQclear(res5);
 
     return { true, "OK: Создан чат с пользователем " + nickname };
-}
-
-std::tuple<bool, std::string, int> Database::getChatIdWithUser(int user_id, const std::string& peer_nickname) {
-    std::string query = "SELECT id FROM \"Users\" WHERE nickname = '" + peer_nickname + "';";
-    PGresult* res = PQexec(conn, query.c_str());
-    if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
-        PQclear(res);
-        return { false, "Пользователь не найден", -1 };
-    }
-    int peer_id = std::stoi(PQgetvalue(res, 0, 0));
-    PQclear(res);
-
-    query =
-        "SELECT uc1.chat_id "
-        "FROM \"Users_Chats\" uc1 "
-        "JOIN \"Users_Chats\" uc2 ON uc1.chat_id = uc2.chat_id "
-        "WHERE uc1.user_id = " + std::to_string(user_id) + " AND uc2.user_id = " + std::to_string(peer_id) + " "
-        "LIMIT 1;";
-    res = PQexec(conn, query.c_str());
-
-    if (PQresultStatus(res) != PGRES_TUPLES_OK || PQntuples(res) == 0) {
-        PQclear(res);
-        return { false, "Чат с данным пользователем не найден", -1 };
-    }
-
-    int chat_id = std::stoi(PQgetvalue(res, 0, 0));
-    PQclear(res);
-    return { true, "OK", chat_id };
 }
 
 bool Database::sendMessage(int chat_id, int sender_id, const std::string& content) {

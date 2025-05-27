@@ -114,7 +114,6 @@
 				<family>default</family>
 				<face>Roboto</face>
 			</font>
-			<help>+79000000000</help>
 			<style>wxTE_PASSWORD|wxTE_LEFT|wxBORDER_NONE</style>
 			<handler function="OnPswdCtrlText" entry="EVT_TEXT" />
 		</object>
@@ -133,7 +132,6 @@
 				<family>default</family>
 				<face>Roboto</face>
 			</font>
-			<help>+79000000000</help>
 			<style>wxTE_LEFT|wxTE_CENTRE|wxBORDER_NONE</style>
 			<handler function="OnNickCtrlText" entry="EVT_TEXT" />
 		</object>
@@ -150,7 +148,7 @@
 		</object>
 		<object class="wxListCtrl" name="ID_LISTCTRL1" variable="chatListCtrl" member="yes">
 			<pos>8,32</pos>
-			<size>328,688</size>
+			<size>328,648</size>
 			<hidden>1</hidden>
 			<fg>#FFFFFF</fg>
 			<bg>#141414</bg>
@@ -163,7 +161,7 @@
 				<face>Roboto</face>
 			</font>
 			<style>wxLC_REPORT|wxLC_NO_HEADER|wxLC_SINGLE_SEL|wxBORDER_NONE</style>
-			<handler function="OnchatListCtrlBeginDrag" entry="EVT_LIST_BEGIN_DRAG" />
+			<handler function="OnchatListCtrlItemSelect" entry="EVT_LIST_ITEM_SELECTED" />
 		</object>
 		<object class="wxPanel" name="ID_PANEL2" variable="Panel2" member="yes">
 			<pos>344,32</pos>
@@ -171,13 +169,13 @@
 			<hidden>1</hidden>
 			<bg>#1C1C1C</bg>
 			<object class="wxRichTextCtrl" name="ID_RICHTEXTCTRL1" variable="messageArea" member="yes">
-				<value>Text</value>
+				<text_colour>#FFFFFF</text_colour>
 				<text_background_colour>#141414</text_background_colour>
 				<pos>1,0</pos>
 				<size>1088,648</size>
 				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
 				<bg>#141414</bg>
-				<style>wxRE_MULTILINE|wxBORDER_NONE</style>
+				<style>wxRE_MULTILINE|wxRE_READONLY|wxBORDER_NONE</style>
 			</object>
 			<object class="wxPanel" name="ID_PANEL3" variable="Panel3" member="yes">
 				<pos>0,656</pos>
@@ -201,6 +199,25 @@
 					<style>wxTE_PROCESS_ENTER|wxBORDER_NONE</style>
 				</object>
 			</object>
+		</object>
+		<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">
+			<label>+</label>
+			<pos>8,688</pos>
+			<size>24,23</size>
+			<hidden>1</hidden>
+			<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+			<bg>#004080</bg>
+			<font>
+				<size>16</size>
+				<style>normal</style>
+				<weight>bold</weight>
+				<underlined>0</underlined>
+				<family>default</family>
+				<face>Roboto</face>
+			</font>
+			<tooltip>12</tooltip>
+			<style>wxBORDER_NONE</style>
+			<handler function="OnButton1Click" entry="EVT_BUTTON" />
 		</object>
 	</object>
 </wxsmith>
