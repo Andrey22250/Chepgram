@@ -68,6 +68,7 @@ class ClientFrame: public wxFrame
         void OnsendButtonClick(wxCommandEvent& event);
         void OnchatListCtrlItemSelect(wxListEvent& event);
         void OnButton1Click(wxCommandEvent& event);
+        void OninputFieldText(wxCommandEvent& event);
         //*)
         void OnTimer1Trigger(wxTimerEvent& event);
         awaitable<void> send_message(const std::string& message);
@@ -78,6 +79,8 @@ class ClientFrame: public wxFrame
         awaitable<void> Nickname();
         awaitable<void> LoadChats();
         awaitable<void> AddNewChat();
+        awaitable<void> SendMsg();
+        awaitable<void> GetMsg();
 
         //(*Identifiers(ClientFrame)
         static const wxWindowID ID_BUTTON3;
@@ -97,6 +100,7 @@ class ClientFrame: public wxFrame
         static const wxWindowID ID_BUTTON6;
         static const wxWindowID ID_TEXTCTRL4;
         static const wxWindowID ID_PANEL3;
+        static const wxWindowID ID_STATICTEXT4;
         static const wxWindowID ID_PANEL2;
         static const wxWindowID ID_BUTTON7;
         //*)
@@ -118,6 +122,7 @@ class ClientFrame: public wxFrame
         wxRichTextCtrl* messageArea;
         wxStaticText* AuthText;
         wxStaticText* LabelMain;
+        wxStaticText* NameUserLbl;
         wxStaticText* PhoneNumText;
         wxTextCtrl* NickCtrl;
         wxTextCtrl* PhoneCtrl;

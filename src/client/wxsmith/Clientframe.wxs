@@ -64,6 +64,7 @@
 			<maxlength>12</maxlength>
 			<pos>584,352</pos>
 			<size>264,48</size>
+			<focused>1</focused>
 			<fg>wxSYS_COLOUR_WINDOW</fg>
 			<bg>#282828</bg>
 			<font>
@@ -77,6 +78,7 @@
 			<help>+79000000000</help>
 			<style>wxTE_CENTRE|wxBORDER_NONE</style>
 			<handler function="OnPhoneCtrlText" entry="EVT_TEXT" />
+			<handler function="OnNextButClick" entry="EVT_TEXT_ENTER" />
 		</object>
 		<object class="wxButton" name="ID_BUTTON1" variable="AuthBut" member="yes">
 			<label>-&gt;</label>
@@ -116,6 +118,7 @@
 			</font>
 			<style>wxTE_PASSWORD|wxTE_LEFT|wxBORDER_NONE</style>
 			<handler function="OnPswdCtrlText" entry="EVT_TEXT" />
+			<handler function="OnPswdButClick" entry="EVT_TEXT_ENTER" />
 		</object>
 		<object class="wxTextCtrl" name="ID_TEXTCTRL3" variable="NickCtrl" member="yes">
 			<maxlength>12</maxlength>
@@ -134,6 +137,7 @@
 			</font>
 			<style>wxTE_LEFT|wxTE_CENTRE|wxBORDER_NONE</style>
 			<handler function="OnNickCtrlText" entry="EVT_TEXT" />
+			<handler function="OnNickButClick" entry="EVT_TEXT_ENTER" />
 		</object>
 		<object class="wxButton" name="ID_BUTTON5" variable="NickBut" member="yes">
 			<label>-&gt;</label>
@@ -171,11 +175,11 @@
 			<object class="wxRichTextCtrl" name="ID_RICHTEXTCTRL1" variable="messageArea" member="yes">
 				<text_colour>#FFFFFF</text_colour>
 				<text_background_colour>#141414</text_background_colour>
-				<pos>1,0</pos>
-				<size>1088,648</size>
+				<pos>1,24</pos>
+				<size>1088,624</size>
 				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
 				<bg>#141414</bg>
-				<style>wxRE_MULTILINE|wxRE_READONLY|wxBORDER_NONE</style>
+				<style>wxRE_MULTILINE|wxRE_READONLY|wxBORDER_NONE|wxVSCROLL|wxFULL_REPAINT_ON_RESIZE</style>
 			</object>
 			<object class="wxPanel" name="ID_PANEL3" variable="Panel3" member="yes">
 				<pos>0,656</pos>
@@ -185,6 +189,7 @@
 					<label>-&gt;</label>
 					<pos>1056,0</pos>
 					<size>35,20</size>
+					<enabled>0</enabled>
 					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
 					<bg>#004080</bg>
 					<extra_code>sendButton-&gt;Raise();</extra_code>
@@ -196,8 +201,32 @@
 					<size>1048,23</size>
 					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
 					<bg>#141414</bg>
+					<font>
+						<size>14</size>
+						<style>normal</style>
+						<weight>normal</weight>
+						<underlined>0</underlined>
+						<family>default</family>
+						<face>Roboto</face>
+					</font>
 					<style>wxTE_PROCESS_ENTER|wxBORDER_NONE</style>
+					<handler function="OninputFieldText" entry="EVT_TEXT" />
+					<handler function="OnsendButtonClick" entry="EVT_TEXT_ENTER" />
 				</object>
+			</object>
+			<object class="wxStaticText" name="ID_STATICTEXT4" variable="NameUserLbl" member="yes">
+				<label></label>
+				<pos>0,0</pos>
+				<fg>#FFFFFF</fg>
+				<font>
+					<size>14</size>
+					<style>normal</style>
+					<weight>normal</weight>
+					<underlined>0</underlined>
+					<family>default</family>
+					<face>Roboto Medium</face>
+				</font>
+				<style>wxBORDER_NONE</style>
 			</object>
 		</object>
 		<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">

@@ -15,6 +15,7 @@ bool Database::connect() {
     return true;
 }
 
+//Проверка номера телефона+
 std::pair<bool, std::string> Database::checkPhoneExists(const std::string& phone) {
     std::string query = "SELECT id FROM \"Users\" WHERE phonenumber = '" + phone + "';";
     PGresult* res = PQexec(conn, query.c_str());
@@ -34,6 +35,7 @@ std::pair<bool, std::string> Database::checkPhoneExists(const std::string& phone
     return { false, "NEW" }; // нет такого номера
 }
 
+//Получение пароля++
 std::pair<bool, std::string> Database::verifyPassword(int userId, const std::string& password) {
     std::string query = "SELECT password, nickname FROM \"Users\" WHERE id = " + std::to_string(userId) + ";";
     PGresult* res = PQexec(conn, query.c_str());
@@ -55,6 +57,7 @@ std::pair<bool, std::string> Database::verifyPassword(int userId, const std::str
     }
 }
 
+//Регистрация нового пользователя+-
 std::tuple<bool, std::string, int> Database::registerNewUser(const std::string& phone, const std::string& password, const std::string& nickname) {
     // Проверка ника
     std::string checkNickQuery = "SELECT id FROM \"Users\" WHERE nickname = '" + nickname + "';";
@@ -81,26 +84,31 @@ std::tuple<bool, std::string, int> Database::registerNewUser(const std::string& 
     return { true, "Ваш телефон = " + phone + ", ваше имя пользователя = " + nickname + " (зарегистрирован)", std::stoi(newId)};
 }
 
+//Получение списка чатов+
 std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
     std::vector<ChatsInfo> chats;
 
-    std::string query = "SELECT uc.chat_id, u.nickname, "
-      "  CASE "
-      "    WHEN now() - Ct.last_message < INTERVAL '2 days' "
-      "      THEN to_char(Ct.last_message, 'HH24:MI') "
-      "    ELSE to_char(Ct.last_message, 'DD.MM.YYYY') "
-      "  END AS last_message_display "
-      "FROM \"Users_Chats\" uc "
-      "JOIN \"Users_Chats\" uc2 "
-      "  ON uc.chat_id = uc2.chat_id "
-        " AND uc2.user_id != " + std::to_string(userId) +
-        " JOIN \"Users\" u "
+    std::string query =
+        "SELECT uc.chat_id, "
+        "  CASE "
+        "    WHEN c.is_group THEN c.name "
+        "    ELSE u.nickname "
+        "  END AS display_name, "
+        "  CASE "
+        "    WHEN now() - c.last_message < INTERVAL '2 days' "
+        "      THEN to_char(c.last_message, 'HH24:MI') "
+        "    ELSE to_char(c.last_message, 'DD.MM.YYYY') "
+        "  END AS last_message_display "
+        "FROM \"Users_Chats\" uc "
+        "JOIN \"Users_Chats\" uc2 "
+        "  ON uc.chat_id = uc2.chat_id AND uc2.user_id != " + std::to_string(userId) + " "
+        "JOIN \"Users\" u "
         "  ON u.id = uc2.user_id "
-        "LEFT JOIN \"Chats\" Ct "
-        "  ON Ct.id = uc.chat_id "
+        "JOIN \"Chats\" c "
+        "  ON c.id = uc.chat_id "
         "WHERE uc.user_id = " + std::to_string(userId) + " "
-        "GROUP BY uc.chat_id, u.nickname, last_message_display "
-        "ORDER BY MAX(Ct.last_message) DESC NULLS LAST;";
+        "GROUP BY uc.chat_id, display_name, last_message_display "
+        "ORDER BY MAX(c.last_message) DESC NULLS LAST;";
 
     PGresult* res = PQexec(conn,query.c_str());
 
@@ -124,6 +132,7 @@ std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
     return chats;
 }
 
+//Создание чата с пользователем+
 std::pair<bool, std::string> Database::createChatWithUser(int currentUserId, const std::string& nickname) {
     // Найдём ID пользователя по никнейму
     std::string query1 = "SELECT id FROM \"Users\" WHERE nickname = '" + nickname + "';";
@@ -199,6 +208,7 @@ std::pair<bool, std::string> Database::createChatWithUser(int currentUserId, con
     return { true, "OK: Создан чат с пользователем " + nickname };
 }
 
+//Отправка сообщения+
 bool Database::sendMessage(int chat_id, int sender_id, const std::string& content) {
     std::string query =
         "INSERT INTO \"Messages\" (chats_id, sender, content, timestamp) VALUES (" +
@@ -215,13 +225,19 @@ std::string Database::getMessagesForChat(int chatId) {
     std::string result;
 
     std::string query =
-        "SELECT nickname, content, timestamp AT TIME ZONE 'Asia/Barnaul' FROM ("
-        "   SELECT u.nickname, m.content, m.timestamp "
-        "   FROM \"Messages\" m "
-        "   JOIN \"Users\" u ON m.sender = u.id "
-        "   WHERE m.chats_id = " + std::to_string(chatId) + " "
-        "   ORDER BY m.timestamp DESC "
-        "   LIMIT 78"
+        "SELECT nickname, content, formatted_time "
+        "FROM ( "
+        "    SELECT u.nickname, m.content, m.timestamp, "
+        "           CASE "
+        "               WHEN now() - m.timestamp < INTERVAL '2 days' "
+        "                   THEN TO_CHAR(m.timestamp AT TIME ZONE 'Asia/Barnaul', 'HH24:MI') "
+        "               ELSE TO_CHAR(m.timestamp AT TIME ZONE 'Asia/Barnaul', 'DD.MM.YYYY HH24:MI') "
+        "           END AS formatted_time "
+        "    FROM \"Messages\" m "
+        "    JOIN \"Users\" u ON m.sender = u.id "
+        "    WHERE m.chats_id = " + std::to_string(chatId) + " "
+        "    ORDER BY m.timestamp DESC "
+        "    LIMIT 40 "
         ") sub "
         "ORDER BY timestamp ASC;";
 
@@ -238,7 +254,7 @@ std::string Database::getMessagesForChat(int chatId) {
         std::string content = PQgetvalue(res, i, 1);
         std::string timestamp = PQgetvalue(res, i, 2);
 
-        result += "[" + timestamp + "] " + nickname + ": " + content + "\n";
+        result += nickname + "[" + timestamp + "] " + " " + content + "\n";
     }
 
     PQclear(res);
