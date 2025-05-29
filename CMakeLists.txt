@@ -30,29 +30,27 @@ project ("Chepgram")
 
 # Добавьте источник в исполняемый файл этого проекта.
 add_executable (Chepgram "Chepgram.cpp" "Chepgram.h" "src/db/Database.h" "src/db/Database.cpp")
-add_executable (Chepgram_Client "src/client/client.cpp"  "src/client/client.h")
-add_executable (Chepgram_NewClient WIN32 "src/client/ClientMain.cpp" "src/client/ClientMain.h" "src/client/ClientApp.cpp" "src/client/ClientApp.h")
+add_executable (Chepgram_Client WIN32 "src/client/ClientMain.cpp" "src/client/ClientMain.h" "src/client/ClientApp.cpp" "src/client/ClientApp.h" "src/client/messagePanel.h" "src/client/messagePanel.cpp")
 
 target_link_libraries(Chepgram
 	libpq
 	ws2_32
 )
 
-target_include_directories(Chepgram_NewClient PRIVATE
+target_include_directories(Chepgram_Client PRIVATE
     ${wxWidgets_ROOT_DIR}/include
     ${wxWidgets_ROOT_DIR}/lib/vc_x64_lib/mswud
 )
 
-target_link_directories(Chepgram_NewClient PRIVATE
+target_link_directories(Chepgram_Client PRIVATE
     ${wxWidgets_LIB_DIR}
 )
 
-target_link_libraries(Chepgram_NewClient ${wxWidgets_LIBRARIES})
+target_link_libraries(Chepgram_Client ${wxWidgets_LIBRARIES})
 
 if (CMAKE_VERSION VERSION_GREATER 3.12)
   set_property(TARGET Chepgram PROPERTY CXX_STANDARD 20)
   set_property(TARGET Chepgram_Client PROPERTY CXX_STANDARD 20)
-  set_property(TARGET Chepgram_NewClient PROPERTY CXX_STANDARD 20)
 endif()
 
 # TODO: Добавьте тесты и целевые объекты, если это необходимо.

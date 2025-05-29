@@ -237,7 +237,7 @@ std::string Database::getMessagesForChat(int chatId) {
         "    JOIN \"Users\" u ON m.sender = u.id "
         "    WHERE m.chats_id = " + std::to_string(chatId) + " "
         "    ORDER BY m.timestamp DESC "
-        "    LIMIT 40 "
+        "    LIMIT 9 "
         ") sub "
         "ORDER BY timestamp ASC;";
 
@@ -254,9 +254,37 @@ std::string Database::getMessagesForChat(int chatId) {
         std::string content = PQgetvalue(res, i, 1);
         std::string timestamp = PQgetvalue(res, i, 2);
 
-        result += nickname + "[" + timestamp + "] " + " " + content + "\n";
+        result += nickname + "[" + timestamp + "] " + content + "\n";
     }
 
     PQclear(res);
     return result.empty() ? "Нет сообщений" : result;
+}
+
+std::vector<int> Database::getUpdatedChats(int userId) {
+    std::vector<int> updated;
+
+    std::string query = 
+        "SELECT c.id FROM \"Chats\" c "
+        "JOIN \"Users_Chats\" uc ON c.id = uc.chat_id "
+        "JOIN \"Messages\" m ON c.id = m.chats_id "
+        "WHERE uc.user_id = " + std::to_string(userId) +
+         " AND c.last_message > NOW() - INTERVAL '2 seconds' "
+        "AND m.timestamp > NOW() - INTERVAL '10 seconds' "
+        "AND m.sender != "+ std::to_string(userId) + ";";
+
+    PGresult* res = PQexec(conn, query.c_str());
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        std::cerr << "Ошибка в getUpdatedChatsForUser: " << PQerrorMessage(conn) << std::endl;
+        PQclear(res);
+        return updated;
+    }
+
+    int rows = PQntuples(res);
+    for (int i = 0; i < rows; ++i) {
+        updated.push_back(std::stoi(PQgetvalue(res, i, 0)));
+    }
+
+    PQclear(res);
+    return updated;
 }

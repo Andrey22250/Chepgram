@@ -28,6 +28,7 @@ public:
     std::tuple<bool, std::string, int> getChatIdWithUser(int user_id, const std::string& peer_nickname);
     bool sendMessage(int chat_id, int sender_id, const std::string& content);
     std::string getMessagesForChat(int chatId);
+    std::vector<int> getUpdatedChats(int userId);
 private:
     PGconn* conn;
 };

@@ -172,22 +172,13 @@
 			<size>1088,680</size>
 			<hidden>1</hidden>
 			<bg>#1C1C1C</bg>
-			<object class="wxRichTextCtrl" name="ID_RICHTEXTCTRL1" variable="messageArea" member="yes">
-				<text_colour>#FFFFFF</text_colour>
-				<text_background_colour>#141414</text_background_colour>
-				<pos>1,24</pos>
-				<size>1088,624</size>
-				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
-				<bg>#141414</bg>
-				<style>wxRE_MULTILINE|wxRE_READONLY|wxBORDER_NONE|wxVSCROLL|wxFULL_REPAINT_ON_RESIZE</style>
-			</object>
 			<object class="wxPanel" name="ID_PANEL3" variable="Panel3" member="yes">
 				<pos>0,656</pos>
 				<size>1088,20</size>
 				<bg>#141414</bg>
 				<object class="wxButton" name="ID_BUTTON6" variable="sendButton" member="yes">
 					<label>-&gt;</label>
-					<pos>1056,0</pos>
+					<pos>1040,0</pos>
 					<size>35,20</size>
 					<enabled>0</enabled>
 					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
@@ -198,11 +189,11 @@
 				</object>
 				<object class="wxTextCtrl" name="ID_TEXTCTRL4" variable="inputField" member="yes">
 					<maxlength>5000</maxlength>
-					<size>1048,23</size>
+					<size>1032,23</size>
 					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
 					<bg>#141414</bg>
 					<font>
-						<size>14</size>
+						<size>13</size>
 						<style>normal</style>
 						<weight>normal</weight>
 						<underlined>0</underlined>
@@ -228,25 +219,29 @@
 				</font>
 				<style>wxBORDER_NONE</style>
 			</object>
-		</object>
-		<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">
-			<label>+</label>
-			<pos>8,688</pos>
-			<size>24,23</size>
-			<hidden>1</hidden>
-			<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
-			<bg>#004080</bg>
-			<font>
-				<size>16</size>
-				<style>normal</style>
-				<weight>bold</weight>
-				<underlined>0</underlined>
-				<family>default</family>
-				<face>Roboto</face>
-			</font>
-			<tooltip>12</tooltip>
-			<style>wxBORDER_NONE</style>
-			<handler function="OnButton1Click" entry="EVT_BUTTON" />
+			<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">
+				<label>+</label>
+				<pos>8,688</pos>
+				<size>24,23</size>
+				<hidden>1</hidden>
+				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+				<bg>#004080</bg>
+				<font>
+					<size>16</size>
+					<style>normal</style>
+					<weight>bold</weight>
+					<underlined>0</underlined>
+					<family>default</family>
+					<face>Roboto</face>
+				</font>
+				<tooltip>12</tooltip>
+				<style>wxBORDER_NONE</style>
+				<handler function="OnButton1Click" entry="EVT_BUTTON" />
+			</object>
+			<object class="wxRichTextCtrl" name="ID_RICHTEXTCTRL1" variable="messageArea" member="yes">
+				<value>Text</value>
+				<pos>8,32</pos>
+			</object>
 		</object>
 	</object>
 </wxsmith>

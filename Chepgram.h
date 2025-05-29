@@ -6,3 +6,8 @@
 #include <Windows.h>
 #include <conio.h>
 #endif
+
+using boost::asio::ip::tcp;
+using namespace boost::asio;
+
+io_context io;

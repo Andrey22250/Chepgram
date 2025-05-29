@@ -1,8 +1,5 @@
 ﻿#include "Chepgram.h"
 
-using boost::asio::ip::tcp;
-using namespace boost::asio;
-
 awaitable<void> send_message(tcp::socket& socket, const std::string& message) {
     co_await async_write(socket, buffer(message + "\0"), use_awaitable);
 }
@@ -96,10 +93,32 @@ awaitable<void> createChat(tcp::socket& socket, Database& db, const std::string&
     co_await send_message(socket, response);
 }
 
+awaitable<void> handle_session_notify(tcp::socket socket, Database& db) {
+    try {
+        std::string message = co_await read_response(socket);
+        int userID = std::stoi(message);
+        auto executor = co_await boost::asio::this_coro::executor;
+        while (true) {
+            // Периодически проверяем изменения в last_message (можно улучшить через кэш или очередь)
+            auto updatedChats = db.getUpdatedChats(userID);  // вернёт список chat_id, где обновился last_message
+            steady_timer timer(executor);
+            for (int chat_id : updatedChats) {
+                std::string notify = "UPDATE CHAT " + std::to_string(chat_id);
+                co_await send_message(socket, notify);
+            }
+            timer.expires_after(std::chrono::seconds(1));
+            co_await timer.async_wait(use_awaitable); //Чтобы опрос был только раз в секунду
+        }
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Ошибка соединения уведомлений: пользователь разорвал соединение" << std::endl;
+    }
+}
+
 awaitable<void> handle_session(tcp::socket socket, Database& db) {
     try {
-        int userID;
         while (true) {
+            int userID;
             auto request = co_await read_response(socket);
             std::cout << "Получено: " << request << "\n";
             if (request.starts_with("LOGIN ")) {
@@ -137,7 +156,7 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
         }
     }
     catch (std::exception& e) {
-        std::cerr << "Ошибка сессии: " << e.what() << "\n";
+        std::cerr << "Ошибка сессии: Пользователь разорвал соединение"  << "\n";
     }
 }
 
@@ -147,24 +166,45 @@ int main() {
     SetConsoleOutputCP(1251);
 #endif
     try {
-        io_context io;
+        boost::asio::io_context io;
         tcp::acceptor acceptor(io, tcp::endpoint(tcp::v4(), 12345));
         std::cout << "[Сервер] Запущен на порту 12345...\n";
 
-        Database db;
-        if (!db.connect()) return 1;
-
         co_spawn(io, [&]() -> awaitable<void> {
             for (;;) {
+                
                 tcp::socket socket = co_await acceptor.async_accept(use_awaitable);
-                co_spawn(io, handle_session(std::move(socket), db), detached);
+
+                // Прочитаем первую строку после соединения, чтобы узнать роль
+                std::string role = co_await read_response(socket);
+
+                if (role == "MAIN") {
+                    std::cout << "[Сервер] Принято MAIN соединение\n";
+                    co_spawn(io, [s = std::move(socket)]() mutable -> awaitable<void> {
+                        Database db;
+                        if (!db.connect()) co_return;
+                        co_await handle_session(std::move(s), db);
+                        }, detached);
+                }
+                else if (role == "NOTIFY") {
+                    std::cout << "[Сервер] Принято NOTIFY соединение\n";
+                    co_spawn(io, [s = std::move(socket)]() mutable -> awaitable<void> {
+                        Database db;
+                        if (!db.connect()) co_return;
+                        co_await handle_session_notify(std::move(s), db);
+                        }, detached);
+                }
+                else {
+                    std::cerr << "[Сервер] Неизвестная роль соединения: " << role << "\n";
+                    socket.close();
+                }
             }
             }, detached);
 
         io.run();
     }
     catch (std::exception& e) {
-        std::cerr << "Ошибка сервера: " << e.what() << "\n";
+        std::cerr << "Ошибка сервера: пользователь разорвал соединение"  << "\n";
     }
 
     return 0;

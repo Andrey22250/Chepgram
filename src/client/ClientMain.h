@@ -21,11 +21,11 @@
 //*)
 
 #include <wx/textdlg.h>
-#include <wx/timer.h>
 #include <wx/msgdlg.h>
 #include <iostream>
 #include <string>
 #include <boost/asio.hpp>
+#include "messagePanel.h"
 
 using boost::asio::ip::tcp;
 using namespace boost::asio;
@@ -40,6 +40,7 @@ class ClientFrame: public wxFrame
         boost::asio::io_context io_context_;
         std::unique_ptr<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>> work_guard_;
         boost::asio::ip::tcp::socket socket_;
+        tcp::socket notify_socket_;
         std::thread io_thread;
 
         bool m_dragging = false;
@@ -48,6 +49,8 @@ class ClientFrame: public wxFrame
         int userID;
         std::vector<int> chatIds_;
         int activeChatId_ = -1;
+
+        MessagePanel* messagePanel_;
         //(*Handlers(ClientFrame)
         void OnCloseButtonClick(wxCommandEvent& event);
         void OnminButtonClick(wxCommandEvent& event);
@@ -70,9 +73,9 @@ class ClientFrame: public wxFrame
         void OnButton1Click(wxCommandEvent& event);
         void OninputFieldText(wxCommandEvent& event);
         //*)
-        void OnTimer1Trigger(wxTimerEvent& event);
-        awaitable<void> send_message(const std::string& message);
-        awaitable<std::string> read_response();
+        awaitable<void> notify_session();
+        awaitable<void> send_message(const std::string& message, tcp::socket& socket);
+        awaitable<std::string> read_response(tcp::socket& socket);
         awaitable<void> main_session();
         awaitable<void> PhoneEnter();
         awaitable<void> Password();
@@ -96,16 +99,15 @@ class ClientFrame: public wxFrame
         static const wxWindowID ID_TEXTCTRL3;
         static const wxWindowID ID_BUTTON5;
         static const wxWindowID ID_LISTCTRL1;
-        static const wxWindowID ID_RICHTEXTCTRL1;
         static const wxWindowID ID_BUTTON6;
         static const wxWindowID ID_TEXTCTRL4;
         static const wxWindowID ID_PANEL3;
         static const wxWindowID ID_STATICTEXT4;
-        static const wxWindowID ID_PANEL2;
         static const wxWindowID ID_BUTTON7;
+        static const wxWindowID ID_RICHTEXTCTRL1;
+        static const wxWindowID ID_PANEL2;
         //*)
         static const wxWindowID ID_TEXTENTRYDIALOG1;
-        static const wxWindowID ID_TIMER1;
 
         //(*Declarations(ClientFrame)
         wxButton* AddChatBut;
@@ -130,7 +132,6 @@ class ClientFrame: public wxFrame
         wxTextCtrl* inputField;
         //*)
         wxTextEntryDialog* TextEntryDialog1;
-        wxTimer Timer1;
 
         DECLARE_EVENT_TABLE()
 };
