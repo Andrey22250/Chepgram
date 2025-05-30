@@ -1,4 +1,4 @@
-﻿#include "../src/db/Database.h"
+﻿#include "src/db/Database.h"
 #include <libpq-fe.h>
 #include <iostream>
 #include <boost/asio.hpp>

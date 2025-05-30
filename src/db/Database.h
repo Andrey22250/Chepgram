@@ -8,7 +8,6 @@ struct ChatsInfo {
     int chat_id;
     std::string nickname;
     std::string last_message;
-    bool is_group;
 };
 
 class Database {
@@ -30,7 +29,6 @@ public:
     bool sendMessage(int chat_id, int sender_id, const std::string& content);
     std::string getMessagesForChat(int chatId);
     std::vector<int> getUpdatedChats(int userId);
-    std::pair<bool, std::string> createGroupChat(int currentUserId, const std::string& name);
 private:
     PGconn* conn;
 };
