@@ -15,7 +15,6 @@
 #include <wx/frame.h>
 #include <wx/listctrl.h>
 #include <wx/panel.h>
-#include <wx/richtext/richtextctrl.h>
 #include <wx/stattext.h>
 #include <wx/textctrl.h>
 //*)
@@ -47,7 +46,11 @@ class ClientFrame: public wxFrame
         wxPoint m_dragStartPos;
 
         int userID;
-        std::vector<int> chatIds_;
+        struct ChatIdInfo {
+            int id;
+            bool is_group;
+        };
+        std::vector<ChatIdInfo> chatIds_;
         int activeChatId_ = -1;
 
         MessagePanel* messagePanel_;
@@ -72,6 +75,7 @@ class ClientFrame: public wxFrame
         void OnchatListCtrlItemSelect(wxListEvent& event);
         void OnButton1Click(wxCommandEvent& event);
         void OninputFieldText(wxCommandEvent& event);
+        void OnAddToChatClick(wxCommandEvent& event);
         //*)
         awaitable<void> notify_session();
         awaitable<void> send_message(const std::string& message, tcp::socket& socket);
@@ -103,14 +107,15 @@ class ClientFrame: public wxFrame
         static const wxWindowID ID_TEXTCTRL4;
         static const wxWindowID ID_PANEL3;
         static const wxWindowID ID_STATICTEXT4;
-        static const wxWindowID ID_BUTTON7;
-        static const wxWindowID ID_RICHTEXTCTRL1;
+        static const wxWindowID ID_BUTTON8;
         static const wxWindowID ID_PANEL2;
+        static const wxWindowID ID_BUTTON7;
         //*)
         static const wxWindowID ID_TEXTENTRYDIALOG1;
 
         //(*Declarations(ClientFrame)
         wxButton* AddChatBut;
+        wxButton* AddToChat;
         wxButton* AuthBut;
         wxButton* CloseButton;
         wxButton* NickBut;
@@ -121,7 +126,6 @@ class ClientFrame: public wxFrame
         wxPanel* Panel1;
         wxPanel* Panel2;
         wxPanel* Panel3;
-        wxRichTextCtrl* messageArea;
         wxStaticText* AuthText;
         wxStaticText* LabelMain;
         wxStaticText* NameUserLbl;

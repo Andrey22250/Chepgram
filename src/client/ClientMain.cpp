@@ -61,9 +61,9 @@ const wxWindowID ClientFrame::ID_BUTTON6 = wxNewId();
 const wxWindowID ClientFrame::ID_TEXTCTRL4 = wxNewId();
 const wxWindowID ClientFrame::ID_PANEL3 = wxNewId();
 const wxWindowID ClientFrame::ID_STATICTEXT4 = wxNewId();
-const wxWindowID ClientFrame::ID_BUTTON7 = wxNewId();
-const wxWindowID ClientFrame::ID_RICHTEXTCTRL1 = wxNewId();
+const wxWindowID ClientFrame::ID_BUTTON8 = wxNewId();
 const wxWindowID ClientFrame::ID_PANEL2 = wxNewId();
+const wxWindowID ClientFrame::ID_BUTTON7 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(ClientFrame,wxFrame)
@@ -86,7 +86,7 @@ awaitable<std::string> ClientFrame::read_response(tcp::socket& socket) {
 
 awaitable<void> ClientFrame::notify_session() {
     tcp::resolver resolver(io_context_);
-    auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);
+    auto endpoints = co_await resolver.async_resolve("localhost", "12345", use_awaitable);
 
     co_await async_connect(notify_socket_, endpoints, use_awaitable);
 
@@ -117,7 +117,7 @@ awaitable<void> ClientFrame::notify_session() {
 
 awaitable<void> ClientFrame::main_session() {
     tcp::resolver resolver(io_context_);
-    auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);
+    auto endpoints = co_await resolver.async_resolve("localhost", "12345", use_awaitable);
 
     co_await async_connect(socket_, endpoints, use_awaitable);
 
@@ -229,7 +229,14 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     NameUserLbl->SetForegroundColour(wxColour(255,255,255));
     wxFont NameUserLblFont(14,wxFONTFAMILY_DEFAULT,wxFONTSTYLE_NORMAL,wxFONTWEIGHT_NORMAL,false,_T("Roboto Medium"),wxFONTENCODING_DEFAULT);
     NameUserLbl->SetFont(NameUserLblFont);
-    AddChatBut = new wxButton(Panel2, ID_BUTTON7, _T("+"), wxPoint(8,688), wxSize(24,23), wxBORDER_NONE, wxDefaultValidator, _T("ID_BUTTON7"));
+    AddToChat = new wxButton(Panel2, ID_BUTTON8, _T("+"), wxPoint(1064,0), wxSize(24,23), wxBORDER_NONE, wxDefaultValidator, _T("ID_BUTTON8"));
+    AddToChat->Hide();
+    AddToChat->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
+    AddToChat->SetBackgroundColour(wxColour(0,64,128));
+    wxFont AddToChatFont(16,wxFONTFAMILY_DEFAULT,wxFONTSTYLE_NORMAL,wxFONTWEIGHT_BOLD,false,_T("Roboto"),wxFONTENCODING_DEFAULT);
+    AddToChat->SetFont(AddToChatFont);
+    AddToChat->SetToolTip(_T("12"));
+    AddChatBut = new wxButton(this, ID_BUTTON7, _T("+"), wxPoint(8,688), wxSize(24,23), wxBORDER_NONE, wxDefaultValidator, _T("ID_BUTTON7"));
     AddChatBut->Hide();
     AddChatBut->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
     AddChatBut->SetBackgroundColour(wxColour(0,64,128));
@@ -256,17 +263,10 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     Connect(ID_BUTTON6, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnsendButtonClick);
     Connect(ID_TEXTCTRL4, wxEVT_COMMAND_TEXT_UPDATED, (wxObjectEventFunction)&ClientFrame::OninputFieldText);
     Connect(ID_TEXTCTRL4, wxEVT_COMMAND_TEXT_ENTER, (wxObjectEventFunction)&ClientFrame::OnsendButtonClick);
+    Connect(ID_BUTTON8, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnAddToChatClick);
     Connect(ID_BUTTON7, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnButton1Click);
     Connect(wxID_ANY, wxEVT_ACTIVATE, (wxObjectEventFunction)&ClientFrame::OnActivate);
     //*)
-    messageArea = new wxRichTextCtrl(Panel2, ID_RICHTEXTCTRL1, wxEmptyString, wxPoint(1, 24), wxSize(1088, 624), wxRE_MULTILINE | wxRE_READONLY | wxBORDER_NONE | wxVSCROLL | wxFULL_REPAINT_ON_RESIZE, wxDefaultValidator, _T("ID_RICHTEXTCTRL1"));
-    wxRichTextAttr rchtxtAttr_1;
-    rchtxtAttr_1.SetBulletStyle(wxTEXT_ATTR_BULLET_STYLE_ALIGN_LEFT);
-    rchtxtAttr_1.SetTextColour(wxColour(255, 255, 255));
-    rchtxtAttr_1.SetBackgroundColour(wxColour(20, 20, 20));
-    messageArea->SetBasicStyle(rchtxtAttr_1);
-    messageArea->SetForegroundColour(wxSystemSettings::GetColour(wxSYS_COLOUR_HIGHLIGHTTEXT));
-    messageArea->SetBackgroundColour(wxColour(20, 20, 20));
     messagePanel_ = new MessagePanel(Panel2);
     messagePanel_->SetSize(0, 24, 1088, 624);
     AddChatBut->SetToolTip(wxString::FromUTF8("Новый чат"));
@@ -276,6 +276,8 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     CloseButton->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::OnButtonHoverLeave, this);
     AuthBut->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
     AuthBut->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
+    AddToChat->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
+    AddToChat->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
     PswdBut->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
     PswdBut->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
     NickBut->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
@@ -553,30 +555,36 @@ awaitable<void> ClientFrame::LoadChats()
     // 3) парсим строки
     std::istringstream stream(response);
     std::string line;
-    struct ChatInfo { std::string name, last; };
+    struct ChatInfo { std::string name, last; bool is_group = false;};
     std::vector<ChatInfo> chats;
-    std::vector<int> newChatIds;
+    std::vector<ChatIdInfo> newChatIds;
     while (std::getline(stream, line)) {
         ChatInfo info{};
         size_t id_pos = line.find("chat_id=");
         size_t nickname_pos = line.find("nickname=");
         size_t last_pos = line.find("last=");
+        size_t is_group_pos = line.find("is_group=");
 
-        if (id_pos == std::string::npos || nickname_pos == std::string::npos || last_pos == std::string::npos)
+        if (id_pos == std::string::npos || nickname_pos == std::string::npos ||
+            last_pos == std::string::npos || is_group_pos == std::string::npos)
             continue;
 
-        int chat_id = std::stoi(line.substr(id_pos + 8, nickname_pos - id_pos - 9));
-        newChatIds.push_back(chat_id);
-        std::string nickname = line.substr(nickname_pos + 9, last_pos - nickname_pos - 10);
+        std::string nickname = line.substr(nickname_pos + 9, last_pos - (nickname_pos + 9) - 1);
         info.name = nickname;
-        std::string last_time = line.substr(last_pos + 5);
-        info.last = last_time;
-
+        std::string last = line.substr(last_pos + 5, is_group_pos - (last_pos + 5) - 1);
+        info.last = last;
+        std::string is_group_str = line.substr(is_group_pos + 9);
+        info.is_group = (is_group_str == "1" || is_group_str == "true" || is_group_str == "t");
+        ChatIdInfo chatInfo{};
+        int chat_id = std::stoi(line.substr(id_pos + 8, nickname_pos - (id_pos + 8) - 1));
+        chatInfo.id = chat_id;
+        chatInfo.is_group = info.is_group;
+        newChatIds.push_back(std::move(chatInfo));
         chats.push_back(std::move(info));
     }
 
     // 4) обновляем GUI
-    CallAfter([this, chats = std::move(chats), newChatIds]() {
+    CallAfter([this, chats = std::move(chats), newChatIds = std::move(newChatIds)]() {
         chatListCtrl->DeleteAllItems();
 
         long idx = 0;
@@ -594,53 +602,76 @@ awaitable<void> ClientFrame::LoadChats()
 
 awaitable<void> ClientFrame::GetMsg()
 {
-    messageArea->Clear();
+    // Запрос на сервер
     co_await send_message("GET MESSAGES " + std::to_string(activeChatId_), socket_);
-
     std::string messages = co_await read_response(socket_);
+
     if (messages == "ERROR Не удалось получить сообщения") {
         CallAfter([this]() {
-            messageArea->Clear();
-            messageArea->WriteText(wxString::FromUTF8("Ошибка получения сообщений"));
+            messagePanel_->Freeze();
+            messagePanel_->ClearMessages();
+            messagePanel_->AddMessage("", "", "Ошибка получения сообщений", false);
+            messagePanel_->Thaw();
             });
         co_return;
     }
-    else if (messages == "Нет сообщений")
-    {
+    else if (messages == "Нет сообщений") {
         CallAfter([this]() {
-            messageArea->Clear();
-            messageArea->WriteText(wxString::FromUTF8("Начните общение!"));
+            messagePanel_->Freeze();
+            messagePanel_->ClearMessages();
+            messagePanel_->AddMessage("","","Начните общение!", false);
+            messagePanel_->Thaw();
             });
         co_return;
     }
+    else
+    {
+        CallAfter([this, messages]() {
+            messagePanel_->Freeze();
+            messagePanel_->ClearMessages();
 
-    CallAfter([this, messages]() {
-        messageArea->Freeze();
-        messageArea->Clear();
+            std::istringstream stream(messages);
+            std::string line;
 
-        std::istringstream stream(messages);
-        std::string line;
+            while (std::getline(stream, line)) {
+                // Ожидаем формат: <senderId>|<nickname>[HH:MM] сообщение
+                auto sep1 = line.find('|');
+                if (sep1 == std::string::npos) 
+                {
+                    continue;
+                }
+                int senderId = std::stoi(line.substr(0, sep1));
+                std::string rest = line.substr(sep1 + 1);
 
-        while (std::getline(stream, line)) {
-            size_t metaEnd = line.find("] ");
-            if (metaEnd != std::string::npos && metaEnd + 2 < line.length()) {
-                std::string header = line.substr(0, metaEnd + 1); // Alice [14:30]
-                std::string message = line.substr(metaEnd + 2);   // Привет!
+                auto t1 = rest.find('[');
+                auto t2 = rest.find(']');
+                if (t1 == std::string::npos || t2 == std::string::npos) continue;
 
-                messageArea->BeginBold();
-                messageArea->WriteText(wxString::FromUTF8(header));
-                messageArea->EndBold();
-                messageArea->Newline();
+                std::string nickname = rest.substr(0, t1);
+                std::string timestamp = rest.substr(t1 + 1, t2 - t1 - 1);
+                std::string body = rest.substr(t2 + 2); // skip "] "
 
-                messageArea->WriteText(wxString::FromUTF8(message));
-                messageArea->Newline();
-                messageArea->Newline();
+                bool isMine = (senderId == userID);
+
+                messagePanel_->AddMessage(
+                    wxString::FromUTF8(nickname),
+                    wxString::FromUTF8(timestamp),
+                    wxString::FromUTF8(body),
+                    isMine);
             }
-        }
-        messageArea->Thaw();
-        // 🔽 Прокручиваем вниз
-        messageArea->ShowPosition(messageArea->GetLastPosition());
-        });
+            messagePanel_->Thaw();
+
+            // Принудительно обновляем виртуальный размер (особенно если не было сообщений)
+            int w, h;
+            messagePanel_->GetVirtualSize(&w, &h);
+            messagePanel_->SetVirtualSize(GetClientSize().x, h);
+
+            // Сбрасываем скролл в начало (или в конец, как хочешь)
+            messagePanel_->Scroll(0, h);  // или Scroll(0, h);
+            });
+    }
+
+    co_return;
 }
 
 void ClientFrame::OnchatListCtrlItemSelect(wxListEvent& event)
@@ -649,32 +680,68 @@ void ClientFrame::OnchatListCtrlItemSelect(wxListEvent& event)
     std::string nickname = std::string(chatListCtrl->GetItemText(itemIndex).ToUTF8());
     if (itemIndex >= 0 && itemIndex < chatIds_.size())
     {
-        activeChatId_ = chatIds_[itemIndex]; // сохраняем активный чат
+        activeChatId_ = chatIds_[itemIndex].id; // сохраняем активный чат
+        if (chatIds_[itemIndex].is_group)
+            AddToChat->Show();
+        else
+            AddToChat->Hide();
         CallAfter([this, nickname]() {
             Panel2->Show();
             NameUserLbl->SetLabelText(wxString::FromUTF8(nickname));
             inputField->SetLabelText("");
+
+            // Дать GUI время обновиться
+            {
+                co_spawn(io_context_,
+                    [this]() -> awaitable<void> {
+                        co_await GetMsg();
+                    },
+                    detached);
+            }; 
         });
-        co_spawn(io_context_,GetMsg(),detached);
     }
 }
 
 awaitable<void> ClientFrame::AddNewChat()
 {
-    wxTextEntryDialog dialog(this, wxString::FromUTF8("Введите никнейм пользователя для нового чата:"), wxString::FromUTF8("Новый чат"));
-    if (dialog.ShowModal() == wxID_OK)
-    {
-        wxString nickname = dialog.GetValue();
-        if (!nickname.IsEmpty())
-        {
-            co_await send_message("CREATE CHAT nickname=" + std::string(nickname), socket_);
+    wxArrayString choices;
+    choices.Add(wxString::FromUTF8("Личный чат"));
+    choices.Add(wxString::FromUTF8("Групповой чат"));
+
+    wxSingleChoiceDialog dlg(this, wxString::FromUTF8("Выберите тип чата:"), wxString::FromUTF8("Создание чата"), choices);
+    if (dlg.ShowModal() == wxID_OK) {
+        wxString choice = dlg.GetStringSelection();
+        if (choice == wxString::FromUTF8("Личный чат")) {
+            wxTextEntryDialog dialog(this, wxString::FromUTF8("Введите никнейм пользователя для нового чата:"), wxString::FromUTF8("Новый чат"));
+            if (dialog.ShowModal() == wxID_OK)
+            {
+                wxString nickname = dialog.GetValue().ToUTF8();
+                if (!nickname.IsEmpty())
+                {
+                    co_await send_message("CREATE CHAT nickname=" + std::string(nickname), socket_);
+                }
+                std::string message = co_await read_response(socket_);
+                if (message == "ERROR: Ошибка при поиске существующего чата" || message == "ERROR: Не удалось вставить текущего пользователя")
+                    wxMessageBox(wxString::FromUTF8("Ошибка сервера"));
+                else
+                    wxMessageBox(wxString::FromUTF8(message));
+            }
         }
-        std::string message = co_await read_response(socket_);
-        if(message == "ERROR: Ошибка при поиске существующего чата" || message == "ERROR: Не удалось вставить текущего пользователя")
-            wxMessageBox(wxString::FromUTF8("Ошибка сервера"));
-        else
-            wxMessageBox(message);
+        else if (choice == wxString::FromUTF8("Групповой чат")) {
+            wxTextEntryDialog dialog(this, wxString::FromUTF8("Введите название группового чата:"), wxString::FromUTF8("Новый чат"));
+            if (dialog.ShowModal() == wxID_OK)
+            {
+                wxString name = dialog.GetValue().ToUTF8();
+                co_await send_message("CREATE GROUP CHAT name=" + std::string(name), socket_);
+            }
+            wxString message = co_await read_response(socket_);
+            if (message == "ERROR: Не удалось создать чат")
+                wxMessageBox(wxString::FromUTF8("Ошибка сервера"));
+            else
+                wxMessageBox(message);
+        }
     }
+    co_spawn(io_context_, LoadChats(), detached);
 }
 
 void ClientFrame::OnButton1Click(wxCommandEvent& event)
@@ -711,5 +778,9 @@ awaitable<void> ClientFrame::SendMsg()
 
 void ClientFrame::OnsendButtonClick(wxCommandEvent& event)
 {
-    co_spawn(io_context_, SendMsg(), boost::asio::detached);
+    co_spawn(io_context_, SendMsg(), detached);
+}
+
+void ClientFrame::OnAddToChatClick(wxCommandEvent& event)
+{
 }

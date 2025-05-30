@@ -219,9 +219,9 @@
 				</font>
 				<style>wxBORDER_NONE</style>
 			</object>
-			<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">
+			<object class="wxButton" name="ID_BUTTON8" variable="AddToChat" member="yes">
 				<label>+</label>
-				<pos>8,688</pos>
+				<pos>1064,0</pos>
 				<size>24,23</size>
 				<hidden>1</hidden>
 				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
@@ -236,12 +236,27 @@
 				</font>
 				<tooltip>12</tooltip>
 				<style>wxBORDER_NONE</style>
-				<handler function="OnButton1Click" entry="EVT_BUTTON" />
+				<handler function="OnAddToChatClick" entry="EVT_BUTTON" />
 			</object>
-			<object class="wxRichTextCtrl" name="ID_RICHTEXTCTRL1" variable="messageArea" member="yes">
-				<value>Text</value>
-				<pos>8,32</pos>
-			</object>
+		</object>
+		<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">
+			<label>+</label>
+			<pos>8,688</pos>
+			<size>24,23</size>
+			<hidden>1</hidden>
+			<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+			<bg>#004080</bg>
+			<font>
+				<size>16</size>
+				<style>normal</style>
+				<weight>bold</weight>
+				<underlined>0</underlined>
+				<family>default</family>
+				<face>Roboto</face>
+			</font>
+			<tooltip>12</tooltip>
+			<style>wxBORDER_NONE</style>
+			<handler function="OnButton1Click" entry="EVT_BUTTON" />
 		</object>
 	</object>
 </wxsmith>
