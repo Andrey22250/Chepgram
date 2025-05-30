@@ -86,7 +86,7 @@ awaitable<std::string> ClientFrame::read_response(tcp::socket& socket) {
 
 awaitable<void> ClientFrame::notify_session() {
     tcp::resolver resolver(io_context_);
-    auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);
+    auto endpoints = co_await resolver.async_resolve("localhost", "12345", use_awaitable);
 
     co_await async_connect(notify_socket_, endpoints, use_awaitable);
 
@@ -117,7 +117,7 @@ awaitable<void> ClientFrame::notify_session() {
 
 awaitable<void> ClientFrame::main_session() {
     tcp::resolver resolver(io_context_);
-    auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);
+    auto endpoints = co_await resolver.async_resolve("localhost", "12345", use_awaitable);
 
     co_await async_connect(socket_, endpoints, use_awaitable);
 
