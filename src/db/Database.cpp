@@ -98,17 +98,18 @@ std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
         "    WHEN now() - c.last_message < INTERVAL '2 days' "
         "      THEN to_char(c.last_message, 'HH24:MI') "
         "    ELSE to_char(c.last_message, 'DD.MM.YYYY') "
-        "  END AS last_message_display "
+        "  END AS last_message_display, c.is_group "
         "FROM \"Users_Chats\" uc "
-        "JOIN \"Users_Chats\" uc2 "
-        "  ON uc.chat_id = uc2.chat_id AND uc2.user_id != " + std::to_string(userId) + " "
-        "JOIN \"Users\" u "
-        "  ON u.id = uc2.user_id "
-        "JOIN \"Chats\" c "
-        "  ON c.id = uc.chat_id "
+        "JOIN \"Chats\" c ON c.id = uc.chat_id "
+        "LEFT JOIN LATERAL ( "
+        "  SELECT u.nickname "
+        "  FROM \"Users_Chats\" uc2 "
+        "  JOIN \"Users\" u ON u.id = uc2.user_id "
+        "  WHERE uc2.chat_id = uc.chat_id AND uc2.user_id != " + std::to_string(userId) + " "
+        "  LIMIT 1 "
+        ") u ON NOT c.is_group "
         "WHERE uc.user_id = " + std::to_string(userId) + " "
-        "GROUP BY uc.chat_id, display_name, last_message_display "
-        "ORDER BY MAX(c.last_message) DESC NULLS LAST;";
+        "ORDER BY c.last_message DESC NULLS LAST;";
 
     PGresult* res = PQexec(conn,query.c_str());
 
@@ -125,6 +126,7 @@ std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
         info.nickname = PQgetvalue(res, i, 1);
         char* ts = PQgetvalue(res, i, 2);
         info.last_message = ts ? ts : "";
+        info.is_group = PQgetvalue(res, i, 3);
         chats.push_back(info);
     }
 
@@ -225,9 +227,9 @@ std::string Database::getMessagesForChat(int chatId) {
     std::string result;
 
     std::string query =
-        "SELECT nickname, content, formatted_time "
+        "SELECT sender, nickname, content, formatted_time "
         "FROM ( "
-        "    SELECT u.nickname, m.content, m.timestamp, "
+        "    SELECT m.sender, u.nickname, m.content, m.timestamp, "
         "           CASE "
         "               WHEN now() - m.timestamp < INTERVAL '2 days' "
         "                   THEN TO_CHAR(m.timestamp AT TIME ZONE 'Asia/Barnaul', 'HH24:MI') "
@@ -237,7 +239,7 @@ std::string Database::getMessagesForChat(int chatId) {
         "    JOIN \"Users\" u ON m.sender = u.id "
         "    WHERE m.chats_id = " + std::to_string(chatId) + " "
         "    ORDER BY m.timestamp DESC "
-        "    LIMIT 9 "
+        "    LIMIT 8 "
         ") sub "
         "ORDER BY timestamp ASC;";
 
@@ -250,11 +252,12 @@ std::string Database::getMessagesForChat(int chatId) {
 
     int rows = PQntuples(res);
     for (int i = 0; i < rows; ++i) {
-        std::string nickname = PQgetvalue(res, i, 0);
-        std::string content = PQgetvalue(res, i, 1);
-        std::string timestamp = PQgetvalue(res, i, 2);
+        std::string senderId = PQgetvalue(res, i, 0);
+        std::string nickname = PQgetvalue(res, i, 1);
+        std::string content = PQgetvalue(res, i, 2);
+        std::string timestamp = PQgetvalue(res, i, 3);
 
-        result += nickname + "[" + timestamp + "] " + content + "\n";
+        result += senderId + "|" + nickname + "[" + timestamp + "] " + content + "\n";
     }
 
     PQclear(res);
@@ -287,4 +290,35 @@ std::vector<int> Database::getUpdatedChats(int userId) {
 
     PQclear(res);
     return updated;
+}
+
+std::pair<bool, std::string> Database::createGroupChat(int currentUserId, const std::string& name) {
+    // 1. Создание группового чата
+    std::string query1 =
+        "INSERT INTO \"Chats\" (name, is_group) VALUES ('" + name + "', TRUE) RETURNING id;";
+    PGresult* res1 = PQexec(conn, query1.c_str());
+
+    if (PQresultStatus(res1) != PGRES_TUPLES_OK || PQntuples(res1) == 0) {
+        PQclear(res1);
+        return { false, "ERROR: Не удалось создать чат" };
+    }
+
+    int chatId = std::stoi(PQgetvalue(res1, 0, 0));
+    PQclear(res1);
+
+    // 2. Добавление текущего пользователя в Users_Chats
+    std::string insertUserQuery =
+        "INSERT INTO \"Users_Chats\" (user_id, chat_id) VALUES (" +
+        std::to_string(currentUserId) + ", " + std::to_string(chatId) + ");";
+    PGresult* res2 = PQexec(conn, insertUserQuery.c_str());
+
+    bool success = PQresultStatus(res2) == PGRES_COMMAND_OK;
+    PQclear(res2);
+
+    if (!success) {
+        PQclear(res2);
+        return { false, "ERROR: Не удалось создать чат" };
+    }
+
+    return { true, "OK: Создан групповой чат:  " + name };
 }

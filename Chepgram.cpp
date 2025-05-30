@@ -78,7 +78,8 @@ awaitable<void> getUserChats(tcp::socket& socket, Database& db, int userId)
     for (const auto& chat : chats) {
         response += "chat_id=" + std::to_string(chat.chat_id) +
             ";nickname=" + chat.nickname +
-            ";last=" + chat.last_message + "\n";
+            ";last=" + chat.last_message + 
+            ";is_group=" + std::to_string(chat.is_group) + "\n";
     }
     if (response.empty()) {
         response = "NO_CHATS\n";
@@ -150,6 +151,12 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
                 std::string messages = db.getMessagesForChat(chatId);
                 co_await send_message(socket, messages);
             }
+            else if (request.starts_with("CREATE GROUP CHAT "))
+            {
+                std::string name = request.substr(std::string("CREATE GROUP CHAT name=").length());
+                auto [ok, response] = db.createGroupChat(userID, name);
+                co_await send_message(socket, response);
+            }
             else {
                 co_await send_message(socket, "UNKNOWN COMMAND\n");
             }
@@ -177,7 +184,7 @@ int main() {
 
                 // Прочитаем первую строку после соединения, чтобы узнать роль
                 std::string role = co_await read_response(socket);
-
+                std::cout << role << std::endl;
                 if (role == "MAIN") {
                     std::cout << "[Сервер] Принято MAIN соединение\n";
                     co_spawn(io, [s = std::move(socket)]() mutable -> awaitable<void> {
