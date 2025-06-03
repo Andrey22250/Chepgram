@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <wxsmith>
 	<object class="wxFrame" name="ClientFrame">
+		<title>Chepgram</title>
 		<centered>1</centered>
 		<size>1440,720</size>
 		<bg>#202020</bg>
@@ -102,7 +103,7 @@
 			<handler function="OnPswdButClick" entry="EVT_BUTTON" />
 		</object>
 		<object class="wxTextCtrl" name="ID_TEXTCTRL2" variable="PswdCtrl" member="yes">
-			<maxlength>12</maxlength>
+			<maxlength>31</maxlength>
 			<pos>584,352</pos>
 			<size>264,48</size>
 			<hidden>1</hidden>
@@ -121,7 +122,7 @@
 			<handler function="OnPswdButClick" entry="EVT_TEXT_ENTER" />
 		</object>
 		<object class="wxTextCtrl" name="ID_TEXTCTRL3" variable="NickCtrl" member="yes">
-			<maxlength>12</maxlength>
+			<maxlength>35</maxlength>
 			<pos>584,352</pos>
 			<size>264,48</size>
 			<hidden>1</hidden>
@@ -188,7 +189,7 @@
 					<handler function="OnsendButtonClick" entry="EVT_BUTTON" />
 				</object>
 				<object class="wxTextCtrl" name="ID_TEXTCTRL4" variable="inputField" member="yes">
-					<maxlength>5000</maxlength>
+					<maxlength>4999</maxlength>
 					<size>1032,23</size>
 					<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
 					<bg>#141414</bg>
@@ -221,7 +222,7 @@
 			</object>
 			<object class="wxButton" name="ID_BUTTON8" variable="AddToChat" member="yes">
 				<label>+</label>
-				<pos>1064,0</pos>
+				<pos>1032,0</pos>
 				<size>24,23</size>
 				<hidden>1</hidden>
 				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
@@ -237,6 +238,25 @@
 				<tooltip>12</tooltip>
 				<style>wxBORDER_NONE</style>
 				<handler function="OnAddToChatClick" entry="EVT_BUTTON" />
+			</object>
+			<object class="wxButton" name="ID_BUTTON9" variable="ListMembers" member="yes">
+				<label>⋮</label>
+				<pos>1064,0</pos>
+				<size>24,23</size>
+				<hidden>1</hidden>
+				<fg>wxSYS_COLOUR_HIGHLIGHTTEXT</fg>
+				<bg>#004080</bg>
+				<font>
+					<size>16</size>
+					<style>normal</style>
+					<weight>bold</weight>
+					<underlined>0</underlined>
+					<family>default</family>
+					<face>Roboto</face>
+				</font>
+				<tooltip>12</tooltip>
+				<style>wxBORDER_NONE</style>
+				<handler function="OnListMembersClick" entry="EVT_BUTTON" />
 			</object>
 		</object>
 		<object class="wxButton" name="ID_BUTTON7" variable="AddChatBut" member="yes">
@@ -256,7 +276,7 @@
 			</font>
 			<tooltip>12</tooltip>
 			<style>wxBORDER_NONE</style>
-			<handler function="OnButton1Click" entry="EVT_BUTTON" />
+			<handler function="OnAddChatButClick" entry="EVT_BUTTON" />
 		</object>
 	</object>
 </wxsmith>

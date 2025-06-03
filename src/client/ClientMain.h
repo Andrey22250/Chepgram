@@ -73,9 +73,10 @@ class ClientFrame: public wxFrame
         void OnNickCtrlText(wxCommandEvent& event);
         void OnsendButtonClick(wxCommandEvent& event);
         void OnchatListCtrlItemSelect(wxListEvent& event);
-        void OnButton1Click(wxCommandEvent& event);
         void OninputFieldText(wxCommandEvent& event);
         void OnAddToChatClick(wxCommandEvent& event);
+        void OnAddChatButClick(wxCommandEvent& event);
+        void OnListMembersClick(wxCommandEvent& event);
         //*)
         awaitable<void> notify_session();
         awaitable<void> send_message(const std::string& message, tcp::socket& socket);
@@ -88,6 +89,7 @@ class ClientFrame: public wxFrame
         awaitable<void> AddNewChat();
         awaitable<void> SendMsg();
         awaitable<void> GetMsg();
+        awaitable<void> AddUserToGroupChat();
 
         //(*Identifiers(ClientFrame)
         static const wxWindowID ID_BUTTON3;
@@ -108,6 +110,7 @@ class ClientFrame: public wxFrame
         static const wxWindowID ID_PANEL3;
         static const wxWindowID ID_STATICTEXT4;
         static const wxWindowID ID_BUTTON8;
+        static const wxWindowID ID_BUTTON9;
         static const wxWindowID ID_PANEL2;
         static const wxWindowID ID_BUTTON7;
         //*)
@@ -118,6 +121,7 @@ class ClientFrame: public wxFrame
         wxButton* AddToChat;
         wxButton* AuthBut;
         wxButton* CloseButton;
+        wxButton* ListMembers;
         wxButton* NickBut;
         wxButton* PswdBut;
         wxButton* minButton;

@@ -83,7 +83,9 @@ awaitable<void> getUserChats(tcp::socket& socket, Database& db, int userId)
     }
     if (response.empty()) {
         response = "NO_CHATS\n";
+        co_return;
     }
+    response += "\0";
     co_await send_message(socket, response);
 }
 
@@ -104,10 +106,12 @@ awaitable<void> handle_session_notify(tcp::socket socket, Database& db) {
             auto updatedChats = db.getUpdatedChats(userID);  // вернёт список chat_id, где обновился last_message
             steady_timer timer(executor);
             for (int chat_id : updatedChats) {
+                auto ep = socket.remote_endpoint();
+                std::cout << "To: " << ep.address().to_string() << ":" << ep.port() << std::endl;
                 std::string notify = "UPDATE CHAT " + std::to_string(chat_id);
                 co_await send_message(socket, notify);
             }
-            timer.expires_after(std::chrono::seconds(1));
+            timer.expires_after(std::chrono::milliseconds(750));
             co_await timer.async_wait(use_awaitable); //Чтобы опрос был только раз в секунду
         }
     }
@@ -118,9 +122,11 @@ awaitable<void> handle_session_notify(tcp::socket socket, Database& db) {
 
 awaitable<void> handle_session(tcp::socket socket, Database& db) {
     try {
+        int userID = -1;
         while (true) {
-            int userID;
             auto request = co_await read_response(socket);
+            auto ep = socket.remote_endpoint();
+            std::cout << "From: " << ep.address().to_string() << ":" << ep.port() << "    ";
             std::cout << "Получено: " << request << "\n";
             if (request.starts_with("LOGIN ")) {
                 userID = co_await auth(socket, db, request);
@@ -157,6 +163,19 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
                 auto [ok, response] = db.createGroupChat(userID, name);
                 co_await send_message(socket, response);
             }
+            else if (request.starts_with("ADD TO CHAT "))
+            {
+                size_t newline_pos = request.find('\n');
+                std::string nickname = request.substr(21, newline_pos - 21);
+                int chat_id = std::stoi(request.substr(newline_pos + 9));
+                auto [ok, response] = db.addUserToGroupChat(chat_id, nickname);
+                co_await send_message(socket, response);
+                if (ok)
+                {
+                    std::string systemMessage = "User " + nickname + " added to chat.";
+                    db.sendMessage(chat_id, userID, systemMessage);
+                }
+            }
             else {
                 co_await send_message(socket, "UNKNOWN COMMAND\n");
             }
@@ -181,7 +200,7 @@ int main() {
             for (;;) {
                 
                 tcp::socket socket = co_await acceptor.async_accept(use_awaitable);
-
+                
                 // Прочитаем первую строку после соединения, чтобы узнать роль
                 std::string role = co_await read_response(socket);
                 std::cout << role << std::endl;

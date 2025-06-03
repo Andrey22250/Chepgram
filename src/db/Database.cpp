@@ -126,7 +126,7 @@ std::vector<ChatsInfo> Database::getUserChatsAndNames(int userId) {
         info.nickname = PQgetvalue(res, i, 1);
         char* ts = PQgetvalue(res, i, 2);
         info.last_message = ts ? ts : "";
-        info.is_group = PQgetvalue(res, i, 3);
+        info.is_group = std::string(PQgetvalue(res, i, 3)) == "t";
         chats.push_back(info);
     }
 
@@ -219,7 +219,6 @@ bool Database::sendMessage(int chat_id, int sender_id, const std::string& conten
 
     bool success = PQresultStatus(res) == PGRES_COMMAND_OK;
     PQclear(res);
-    if (!success) return false;
     return success;
 }
 
@@ -239,7 +238,7 @@ std::string Database::getMessagesForChat(int chatId) {
         "    JOIN \"Users\" u ON m.sender = u.id "
         "    WHERE m.chats_id = " + std::to_string(chatId) + " "
         "    ORDER BY m.timestamp DESC "
-        "    LIMIT 8 "
+        "    LIMIT 40 "
         ") sub "
         "ORDER BY timestamp ASC;";
 
@@ -272,8 +271,8 @@ std::vector<int> Database::getUpdatedChats(int userId) {
         "JOIN \"Users_Chats\" uc ON c.id = uc.chat_id "
         "JOIN \"Messages\" m ON c.id = m.chats_id "
         "WHERE uc.user_id = " + std::to_string(userId) +
-         " AND c.last_message > NOW() - INTERVAL '2 seconds' "
-        "AND m.timestamp > NOW() - INTERVAL '10 seconds' "
+         " AND c.last_message > NOW() - INTERVAL '1 seconds' "
+        "AND m.timestamp > NOW() - INTERVAL '1 seconds' "
         "AND m.sender != "+ std::to_string(userId) + ";";
 
     PGresult* res = PQexec(conn, query.c_str());
@@ -321,4 +320,39 @@ std::pair<bool, std::string> Database::createGroupChat(int currentUserId, const 
     }
 
     return { true, "OK: Создан групповой чат:  " + name };
+}
+
+std::pair<bool, std::string> Database::addUserToGroupChat(int chatId, const std::string& nickname)
+{
+    std::string userQuery = "SELECT id FROM \"Users\" WHERE nickname = '" + nickname + "';";
+    PGresult* res1 = PQexec(conn, userQuery.c_str());
+    if (PQresultStatus(res1) != PGRES_TUPLES_OK || PQntuples(res1) == 0) {
+        PQclear(res1);
+        return { false, "ERROR: Пользователь не найден" };
+    }
+    int userId = std::stoi(PQgetvalue(res1, 0, 0));
+    PQclear(res1);
+
+    std::string checkQuery = "SELECT 1 FROM \"Users_Chats\" WHERE user_id = " + std::to_string(userId) + " AND chat_id = " + std::to_string(chatId) + ";";
+    PGresult* res2 = PQexec(conn, checkQuery.c_str());
+    if (PQresultStatus(res2) != PGRES_TUPLES_OK) {
+        PQclear(res2);
+        return { false, "ERROR: Ошибка при проверке участника чата" };
+    }
+    if (PQntuples(res2) > 0) {
+        PQclear(res2);
+        return { false, "ERROR: Пользователь уже добавлен в чат" };
+    }
+    PQclear(res2);
+
+    std::string insertQuery = "INSERT INTO \"Users_Chats\" (user_id, chat_id) VALUES (" +
+        std::to_string(userId) + ", " + std::to_string(chatId) + ");";
+    PGresult* res3 = PQexec(conn, insertQuery.c_str());
+    if (PQresultStatus(res3) != PGRES_COMMAND_OK) {
+        PQclear(res3);
+        return { false, "ERROR: Не удалось добавить пользователя в чат" };
+    }
+    PQclear(res3);
+
+    return { true, "OK: Пользователь добавлен в чат" };
 }
