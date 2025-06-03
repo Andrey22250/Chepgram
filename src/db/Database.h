@@ -32,6 +32,7 @@ public:
     std::vector<int> getUpdatedChats(int userId);
     std::pair<bool, std::string> createGroupChat(int currentUserId, const std::string& name);
     std::pair<bool, std::string> addUserToGroupChat(int chat_id, const std::string& nickname);
+    std::string getListMemberOfChat(int chat_id);
 private:
     PGconn* conn;
 };

@@ -90,6 +90,7 @@ class ClientFrame: public wxFrame
         awaitable<void> SendMsg();
         awaitable<void> GetMsg();
         awaitable<void> AddUserToGroupChat();
+        awaitable<void> GetListMembersOfChat();
 
         //(*Identifiers(ClientFrame)
         static const wxWindowID ID_BUTTON3;

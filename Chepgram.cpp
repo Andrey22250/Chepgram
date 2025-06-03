@@ -176,6 +176,12 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
                     db.sendMessage(chat_id, userID, systemMessage);
                 }
             }
+            else if (request.starts_with("GET CHAT MEMBERS "))
+            {
+                int chatId = std::stoi(request.substr(std::string("GET CHAT MEMBERS ").length()));
+                std::string response = db.getListMemberOfChat(chatId);
+                co_await send_message(socket, response);
+            }
             else {
                 co_await send_message(socket, "UNKNOWN COMMAND\n");
             }

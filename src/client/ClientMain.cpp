@@ -272,7 +272,7 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     Connect(ID_TEXTCTRL4, wxEVT_COMMAND_TEXT_UPDATED, (wxObjectEventFunction)&ClientFrame::OninputFieldText);
     Connect(ID_TEXTCTRL4, wxEVT_COMMAND_TEXT_ENTER, (wxObjectEventFunction)&ClientFrame::OnsendButtonClick);
     Connect(ID_BUTTON8, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnAddToChatClick);
-    Connect(ID_BUTTON9, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnAddToChatClick);
+    Connect(ID_BUTTON9, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnListMembersClick);
     Connect(ID_BUTTON7, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnAddChatButClick);
     Connect(wxID_ANY, wxEVT_ACTIVATE, (wxObjectEventFunction)&ClientFrame::OnActivate);
     //*)
@@ -287,6 +287,8 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     AuthBut->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
     AddToChat->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
     AddToChat->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
+    ListMembers->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
+    ListMembers->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
     PswdBut->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
     PswdBut->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
     NickBut->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
@@ -617,8 +619,7 @@ awaitable<void> ClientFrame::GetMsg()
     // Запрос на сервер
     co_await send_message("GET MESSAGES " + std::to_string(activeChatId_), socket_);
     std::string messages = co_await read_response(socket_);
-
-    if (messages == "ERROR Не удалось получить сообщения") {
+    if (messages.starts_with("ERROR ")) {
         CallAfter([this]() {
             messagePanel_->Freeze();
             messagePanel_->ClearMessages();
@@ -631,7 +632,7 @@ awaitable<void> ClientFrame::GetMsg()
             });
         co_return;
     }
-    else if (messages == "Нет сообщений") {
+    else if (messages.starts_with("Нет ")) {
         CallAfter([this]() {
             messagePanel_->Freeze();
             messagePanel_->ClearMessages();
@@ -690,7 +691,6 @@ awaitable<void> ClientFrame::GetMsg()
             messagePanel_->Scroll(0, h);  // или Scroll(0, h);
             });
     }
-
     co_return;
 }
 
@@ -850,4 +850,20 @@ awaitable<void> ClientFrame::AddUserToGroupChat()
 void ClientFrame::OnAddToChatClick(wxCommandEvent& event)
 {
     co_spawn(io_context_, AddUserToGroupChat(), detached);
+}
+
+awaitable<void> ClientFrame::GetListMembersOfChat()
+{
+    std::string request = "GET CHAT MEMBERS " + std::to_string(activeChatId_);
+    co_await send_message(request, socket_);
+    std::string response = co_await read_response(socket_);
+    if (response == "Нет участников")
+        wxMessageBox(wxString::FromUTF8("В чате нет участников."), wxString::FromUTF8("Участники чата"));
+    else
+        wxMessageBox(response, wxString::FromUTF8("Участники чата"));
+}
+
+void ClientFrame::OnListMembersClick(wxCommandEvent& event)
+{
+    co_spawn(io_context_, GetListMembersOfChat(), detached);
 }

@@ -238,7 +238,6 @@ std::string Database::getMessagesForChat(int chatId) {
         "    JOIN \"Users\" u ON m.sender = u.id "
         "    WHERE m.chats_id = " + std::to_string(chatId) + " "
         "    ORDER BY m.timestamp DESC "
-        "    LIMIT 40 "
         ") sub "
         "ORDER BY timestamp ASC;";
 
@@ -355,4 +354,31 @@ std::pair<bool, std::string> Database::addUserToGroupChat(int chatId, const std:
     PQclear(res3);
 
     return { true, "OK: Пользователь добавлен в чат" };
+}
+
+std::string Database::getListMemberOfChat(int chat_id)
+{
+    std::string result;
+    std::string query =
+        "SELECT u.nickname "
+        "FROM \"Users\" u "
+        "JOIN \"Users_Chats\" uc ON u.id = uc.user_id "
+        "WHERE uc.chat_id = " + std::to_string(chat_id) + " "
+        "ORDER BY u.nickname;";
+
+    PGresult* res = PQexec(conn, query.c_str());
+
+    if (PQresultStatus(res) != PGRES_TUPLES_OK) {
+        PQclear(res);
+        return "ERROR: Не удалось получить список участников";
+    }
+
+    int rows = PQntuples(res);
+    for (int i = 0; i < rows; ++i) {
+        std::string nickname = PQgetvalue(res, i, 0);
+        result += nickname + "\n";
+    }
+
+    PQclear(res);
+    return result.empty() ? "Нет участников" : result;
 }
