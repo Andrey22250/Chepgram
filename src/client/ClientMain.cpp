@@ -7,6 +7,9 @@
  * License:
  **************************************************************/
 
+//Есть куски, которые генерирует wxSmith, а есть куски, написанные мной. Различие - в наличии комментов в скобках.
+//Если есть - генерация бля вывода и отрисовки, иначе - мой код
+
 #include "ClientMain.h"
 
 //(*InternalHeaders(ClientFrame)
@@ -68,37 +71,37 @@ const wxWindowID ClientFrame::ID_BUTTON7 = wxNewId();
 //*)
 
 BEGIN_EVENT_TABLE(ClientFrame,wxFrame)
-    EVT_LEFT_DOWN(ClientFrame::OnPanel1LeftDown)
+    EVT_LEFT_DOWN(ClientFrame::OnPanel1LeftDown)    //Нужно для своей верхней панель
     EVT_LEFT_UP(ClientFrame::OnPanel1LeftUp)
     EVT_MOTION(ClientFrame::OnPanel1MouseMove)
 END_EVENT_TABLE()
 
-awaitable<void> ClientFrame::send_message(const std::string& message, tcp::socket& socket)
+awaitable<void> ClientFrame::send_message(const std::string& message, tcp::socket& socket)  //Общение с сервером. Отправка сообщения
 {
     co_await async_write(socket, boost::asio::buffer(message + "\0"), use_awaitable);
 }
 
-awaitable<std::string> ClientFrame::read_response(tcp::socket& socket) {
+awaitable<std::string> ClientFrame::read_response(tcp::socket& socket) {    //Получение сообщения
     streambuf buf;
-    buf.prepare(50<<20);
+    buf.prepare(50<<20);    //Готовим размер буфера, иначе получим 512 байт
     co_await async_read_until(socket, buf, "\0", use_awaitable);
     std::istream is(&buf);
     std::string result;
-    std::getline(is, result, '\0');
+    std::getline(is, result, '\0'); //Записываем результат в строку и отправляем
     co_return result;
 }
 
-awaitable<void> ClientFrame::notify_session() {
+awaitable<void> ClientFrame::notify_session() { //Функция нужна для получения сообщений от другого пользователя - если есть обновление в бд - получаем
     tcp::resolver resolver(io_context_);
     auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);
 
     co_await async_connect(notify_socket_, endpoints, use_awaitable);
 
     // Уведомляем сервер, что это notify-соединение
-    co_await send_message("NOTIFY", notify_socket_);
-    co_await send_message(std::to_string(userID), notify_socket_);
+    co_await send_message("NOTIFY", notify_socket_);    //Роль соединения
+    co_await send_message(std::to_string(userID), notify_socket_);  //id пользователя улетают серверу
     while (true) {
-        auto message = co_await read_response(notify_socket_);
+        auto message = co_await read_response(notify_socket_);  //Ждём сообщения, что произошло обновление
 
         if (message.starts_with("UPDATE CHAT ")) {
             int chatId = std::stoi(message.substr(strlen("UPDATE CHAT ")));
@@ -106,9 +109,9 @@ awaitable<void> ClientFrame::notify_session() {
             // Обновляем список чатов и текущее окно через GUI-поток
             CallAfter([this, chatId]() {
                 co_spawn(io_context_, [this, chatId]() -> awaitable<void> {
-                    co_await LoadChats();
+                    co_await LoadChats();   //Подгрузка списка чатов
                     if (chatId == activeChatId_) {
-                        co_await GetMsg();  // тут GUI-обновления должны быть через CallAfter!
+                        co_await GetMsg();  // Подгрузка чата, если мы в нём
                     }
                     }, detached);
             });
@@ -118,22 +121,23 @@ awaitable<void> ClientFrame::notify_session() {
 
 awaitable<void> ClientFrame::main_session() {
     tcp::resolver resolver(io_context_);
-    auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);
+    auto endpoints = co_await resolver.async_resolve("79.136.138.121", "12345", use_awaitable);     //Главный поток для всех сообщений
 
     co_await async_connect(socket_, endpoints, use_awaitable);
 
     co_await send_message("MAIN", socket_);
 }
 
+//Нужен защитник, чтобы io_context не выключился
 ClientFrame::ClientFrame(wxWindow* parent,wxWindowID id) :io_context_(), socket_(io_context_), notify_socket_(io_context_),
-work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>>(boost::asio::make_work_guard(io_context_)))
+work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_context::executor_type>>(boost::asio::make_work_guard(io_context_)))  
 {
     // Запускаем io_context в отдельном потоке
     io_thread = std::thread([this]() {
         io_context_.run();
         });
 
-    // Запускаем main_session, как в консоли
+    // Запускаем главный поток и ждём отключения от сервера, если его нет - выводим ошибку и закрываем программу
     co_spawn(io_context_, main_session(), [this](std::exception_ptr ep) {
         if (ep) {
             CallAfter([this]() {
@@ -276,10 +280,10 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     Connect(ID_BUTTON7, wxEVT_COMMAND_BUTTON_CLICKED, (wxObjectEventFunction)&ClientFrame::OnAddChatButClick);
     Connect(wxID_ANY, wxEVT_ACTIVATE, (wxObjectEventFunction)&ClientFrame::OnActivate);
     //*)
-    messagePanel_ = new MessagePanel(Panel2);
+    messagePanel_ = new MessagePanel(Panel2);   //Кастомная панель для сообщений
     messagePanel_->SetSize(0, 24, 1088, 624);
     AddChatBut->SetToolTip(wxString::FromUTF8("Новый чат"));
-    minButton->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::OnButtonHoverEnter, this);
+    minButton->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::OnButtonHoverEnter, this);    //Эффекты наведения мыши на кнопку
     minButton->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::OnButtonHoverLeave, this);
     CloseButton->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::OnButtonHoverEnter, this);
     CloseButton->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::OnButtonHoverLeave, this);
@@ -297,10 +301,10 @@ work_guard_(std::make_unique<boost::asio::executor_work_guard<boost::asio::io_co
     AddChatBut->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
     sendButton->Bind(wxEVT_LEAVE_WINDOW, &ClientFrame::RegButtonHoverLeave, this);
     sendButton->Bind(wxEVT_ENTER_WINDOW, &ClientFrame::RegButtonHoverEnter, this);
-    AuthText->SetLabelText(wxString::FromUTF8("Авторизация"));
+    AuthText->SetLabelText(wxString::FromUTF8("Авторизация"));  //Изменение текста из стокового в UTF-8
     ListMembers->SetLabelText(wxString::FromUTF8("⋮"));
     PhoneNumText->SetLabelText(wxString::FromUTF8("Введите номер телефона:"));
-    chatListCtrl->InsertColumn(0, wxString::FromUTF8("Собеседник"), wxLIST_FORMAT_LEFT, 208);
+    chatListCtrl->InsertColumn(0, wxString::FromUTF8("Собеседник"), wxLIST_FORMAT_LEFT, 208);   //Задаём параметры списка чатов
     chatListCtrl->InsertColumn(1, wxString::FromUTF8("Последнее"), wxLIST_FORMAT_RIGHT, 120);
 }
 
@@ -314,20 +318,24 @@ ClientFrame::~ClientFrame()
     //*)
 }
 
+//При закрытии программы - убиваем процесс
 void ClientFrame::OnCloseButtonClick(wxCommandEvent& event)
 {
     Close();
 }
 
+//Минимизируем окно
 void ClientFrame::OnminButtonClick(wxCommandEvent& event)
 {
     this->Iconize(true);
 }
 
+//При активации формы - пока ничего не делаем, но можно фокусить
 void ClientFrame::OnActivate(wxActivateEvent& event)
 {
 }
 
+//Все действия для перетаскивания окна
 void ClientFrame::OnPanel1LeftDown(wxMouseEvent& event)
 {
     if (event.GetEventObject() != Panel1) {
@@ -356,6 +364,7 @@ void ClientFrame::OnPanel1MouseMove(wxMouseEvent& event)
     }
 }
 
+//Отрисовка кнопок закрытия и минимизации, а также всех кнопок приложения
 void ClientFrame::OnButtonHoverEnter(wxMouseEvent& event) {
     wxWindow* btn = dynamic_cast<wxWindow*>(event.GetEventObject());
     if (btn) {
@@ -388,6 +397,7 @@ void ClientFrame::RegButtonHoverLeave(wxMouseEvent& event) {
     }
 }
 
+//Проверяем, чтобы кнопка ввода телефона активировалась только если цифр столько же, как и в Российском номере
 void ClientFrame::OnPhoneCtrlText(wxCommandEvent& event)
 {
     std::string phone = PhoneCtrl->GetValue().ToStdString();
@@ -398,6 +408,7 @@ void ClientFrame::OnPhoneCtrlText(wxCommandEvent& event)
         AuthBut->Disable(); // Если нужно отключать кнопку
 }
 
+//Функция, которая обрабатывает ввод номера
 awaitable<void> ClientFrame::PhoneEnter()
 {
     std::string phone = PhoneCtrl->GetValue().ToStdString();
@@ -415,10 +426,10 @@ awaitable<void> ClientFrame::PhoneEnter()
         PhoneCtrl->SetLabelText(wxString::FromUTF8(""));
         co_return;
     }
-    std::string message = "LOGIN phone=" + phone;
+    std::string message = "LOGIN phone=" + phone;   //Получаем номер телефона со строки и отправляем на обработку
     co_await send_message(message, socket_);
     std::string response = co_await read_response(socket_);
-    CallAfter([this, response]() {
+    CallAfter([this, response]() { //Нужна для правильной отрисовки интерфейса. Чтобы действия были последовательны
         if (response == "NEW") {
             AuthText->SetLabelText(wxString::FromUTF8("Создание аккаунта"));
         }
@@ -435,9 +446,10 @@ awaitable<void> ClientFrame::PhoneEnter()
     });
 }
 
+//При нажатии на кнопку ввода телефона - создаёт предыдущую функцияю
 void ClientFrame::OnNextButClick(wxCommandEvent& event)
 {
-    co_spawn(io_context_, PhoneEnter(), boost::asio::detached);
+    co_spawn(io_context_, PhoneEnter(), boost::asio::detached); //Правильное создание асинхронной функции, чтобы работало в нужном порядке
 }
 
 void ClientFrame::OnPswdCtrlText(wxCommandEvent& event)
@@ -449,12 +461,13 @@ void ClientFrame::OnPswdCtrlText(wxCommandEvent& event)
         PswdBut->Disable();
 }
 
+//Ввод пароля
 awaitable<void> ClientFrame::Password()
 {
     wxString password = PswdCtrl->GetValue().ToUTF8();
-    std::string labelStr = std::string(AuthText->GetLabel().ToUTF8());
+    std::string labelStr = std::string(AuthText->GetLabel().ToUTF8());  //Получаем правильный пароль
     co_await send_message(password.ToStdString(), socket_);
-    if(labelStr == "Вход в аккаунт")
+    if(labelStr == "Вход в аккаунт")    //Сценарий зависит от этапа входа - регистрация или вход
     {
         std::string response = co_await read_response(socket_);
         CallAfter([this, response]() {
@@ -512,6 +525,7 @@ void ClientFrame::OnNickCtrlText(wxCommandEvent& event)
         NickBut->Disable();
 }
 
+//Ввод никнейма, если происходит регистрация
 awaitable<void> ClientFrame::Nickname()
 {
     wxString password = NickCtrl->GetValue().ToUTF8();
@@ -554,6 +568,7 @@ void ClientFrame::OnNickButClick(wxCommandEvent& event)
     co_spawn(io_context_, Nickname(), boost::asio::detached);
 }
 
+//Загрузка списка чатов
 awaitable<void> ClientFrame::LoadChats()
 {
     // 1) отправляем запрос
@@ -614,6 +629,7 @@ awaitable<void> ClientFrame::LoadChats()
         });
 }
 
+//Получение сообщений текущего чата
 awaitable<void> ClientFrame::GetMsg()
 {
     // Запрос на сервер
@@ -717,11 +733,12 @@ void ClientFrame::OnchatListCtrlItemSelect(wxListEvent& event)
             inputField->SetLabelText("");
 
             // Дать GUI время обновиться
-            co_spawn(io_context_, GetMsg(), detached);
+            co_spawn(io_context_, GetMsg(), detached); //Загрузка чата
         });
     }
 }
 
+//Добавление нового чата - личного или группового
 awaitable<void> ClientFrame::AddNewChat()
 {
     wxArrayString choices;
@@ -780,6 +797,7 @@ void ClientFrame::OnAddChatButClick(wxCommandEvent& event)
     co_spawn(io_context_, AddNewChat(), boost::asio::detached);
 }
 
+//Отключение кнопки отправки сообщения
 void ClientFrame::OninputFieldText(wxCommandEvent& event)
 {
     std::string text = inputField->GetValue().ToStdString();
@@ -790,6 +808,7 @@ void ClientFrame::OninputFieldText(wxCommandEvent& event)
         sendButton->Disable(); // Если нужно отключать кнопку
 }
 
+//Функция для отправки сообщения
 awaitable<void> ClientFrame::SendMsg()
 {
     wxString message = inputField->GetValue().ToUTF8();
@@ -799,7 +818,7 @@ awaitable<void> ClientFrame::SendMsg()
     CallAfter([this]() {
         co_spawn(io_context_, [this]() -> awaitable<void> {
             co_await LoadChats();
-            co_await GetMsg();  // тут GUI-обновления должны быть через CallAfter!
+            co_await GetMsg();  
             }, detached);
         CallAfter([this]() {
             int w, h;
@@ -814,6 +833,7 @@ void ClientFrame::OnsendButtonClick(wxCommandEvent& event)
     co_spawn(io_context_, SendMsg(), detached);
 }
 
+//Добавление пользователя в групповой чат
 awaitable<void> ClientFrame::AddUserToGroupChat()
 {
     wxTextEntryDialog dialog(this, wxString::FromUTF8("Введите никнейм пользователя для добавления в чат:"), wxString::FromUTF8("Добавить пользователя"));
@@ -852,6 +872,7 @@ void ClientFrame::OnAddToChatClick(wxCommandEvent& event)
     co_spawn(io_context_, AddUserToGroupChat(), detached);
 }
 
+//Получить список участников чата
 awaitable<void> ClientFrame::GetListMembersOfChat()
 {
     std::string request = "GET CHAT MEMBERS " + std::to_string(activeChatId_);
