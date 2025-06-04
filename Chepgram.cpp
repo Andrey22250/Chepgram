@@ -96,6 +96,56 @@ awaitable<void> createChat(tcp::socket& socket, Database& db, const std::string&
     co_await send_message(socket, response);
 }
 
+awaitable<void> sendMessage(tcp::socket& socket, Database& db, const std::string& request, int userID)
+{
+    // Формат: SEND MESSAGE <chat_id>\n<сообщение>
+    size_t newline_pos = request.find('\n');
+    int chat_id = std::stoi(request.substr(13, newline_pos - 13));
+    std::string content = request.substr(newline_pos + 1);
+
+    bool ok = db.sendMessage(chat_id, userID, content);
+    if (ok) {
+        co_await send_message(socket, "OK");
+    }
+    else {
+        co_await send_message(socket, "ERROR Не удалось отправить сообщение");
+    }
+}
+
+awaitable<void> getMessages(tcp::socket& socket, Database& db, const std::string& request) {
+    int chatId = std::stoi(request.substr(std::string("GET MESSAGES ").length()));
+    std::string messages = db.getMessagesForChat(chatId);
+    co_await send_message(socket, messages);
+}
+
+awaitable<void> createGroupChat(tcp::socket& socket, Database& db, const std::string& request, int userID)
+{
+    std::string name = request.substr(std::string("CREATE GROUP CHAT name=").length());
+    auto [ok, response] = db.createGroupChat(userID, name);
+    co_await send_message(socket, response);
+}
+
+awaitable<void> addUserToChat(tcp::socket& socket, Database& db, const std::string& request, int userID)
+{
+    size_t newline_pos = request.find('\n');
+    std::string nickname = request.substr(21, newline_pos - 21);
+    int chat_id = std::stoi(request.substr(newline_pos + 9));
+    auto [ok, response] = db.addUserToGroupChat(chat_id, nickname);
+    co_await send_message(socket, response);
+    if (ok)
+    {
+        std::string systemMessage = "User " + nickname + " added to chat.";
+        db.sendMessage(chat_id, userID, systemMessage);
+    }
+}
+
+awaitable<void> getChatMembers(tcp::socket& socket, Database& db, const std::string& request)
+{
+    int chatId = std::stoi(request.substr(std::string("GET CHAT MEMBERS ").length()));
+    std::string response = db.getListMemberOfChat(chatId);
+    co_await send_message(socket, response);
+}
+
 awaitable<void> handle_session_notify(tcp::socket socket, Database& db) {
     try {
         std::string message = co_await read_response(socket);
@@ -138,49 +188,23 @@ awaitable<void> handle_session(tcp::socket socket, Database& db) {
             {
                 co_await createChat(socket, db, request, userID);
             }
-            else if(request.starts_with("SEND_MESSAGE ")) {
-                // Формат: SEND_MESSAGE <chat_id>\n<сообщение>
-                size_t newline_pos = request.find('\n');
-                int chat_id = std::stoi(request.substr(13, newline_pos - 13));
-                std::string content = request.substr(newline_pos + 1);
-
-                bool ok = db.sendMessage(chat_id, userID, content);
-                if (ok) {
-                    co_await send_message(socket, "OK");
-                }
-                else {
-                    co_await send_message(socket, "ERROR Не удалось отправить сообщение");
-                }
+            else if(request.starts_with("SEND MESSAGE ")) {
+                co_await sendMessage(socket, db, request, userID);
             }
             else if (request.starts_with("GET MESSAGES ")) {
-                int chatId = std::stoi(request.substr(std::string("GET MESSAGES ").length()));
-                std::string messages = db.getMessagesForChat(chatId);
-                co_await send_message(socket, messages);
+                co_await getMessages(socket, db, request);
             }
             else if (request.starts_with("CREATE GROUP CHAT "))
             {
-                std::string name = request.substr(std::string("CREATE GROUP CHAT name=").length());
-                auto [ok, response] = db.createGroupChat(userID, name);
-                co_await send_message(socket, response);
+                co_await createGroupChat(socket, db, request, userID);
             }
             else if (request.starts_with("ADD TO CHAT "))
             {
-                size_t newline_pos = request.find('\n');
-                std::string nickname = request.substr(21, newline_pos - 21);
-                int chat_id = std::stoi(request.substr(newline_pos + 9));
-                auto [ok, response] = db.addUserToGroupChat(chat_id, nickname);
-                co_await send_message(socket, response);
-                if (ok)
-                {
-                    std::string systemMessage = "User " + nickname + " added to chat.";
-                    db.sendMessage(chat_id, userID, systemMessage);
-                }
+                co_await addUserToChat(socket, db, request, userID);
             }
             else if (request.starts_with("GET CHAT MEMBERS "))
             {
-                int chatId = std::stoi(request.substr(std::string("GET CHAT MEMBERS ").length()));
-                std::string response = db.getListMemberOfChat(chatId);
-                co_await send_message(socket, response);
+                co_await getChatMembers(socket, db, request);
             }
             else {
                 co_await send_message(socket, "UNKNOWN COMMAND\n");

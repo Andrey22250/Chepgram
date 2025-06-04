@@ -793,7 +793,7 @@ void ClientFrame::OninputFieldText(wxCommandEvent& event)
 awaitable<void> ClientFrame::SendMsg()
 {
     wxString message = inputField->GetValue().ToUTF8();
-    co_await send_message("SEND_MESSAGE " + std::to_string(activeChatId_) + "\n" + message.ToStdString(), socket_);
+    co_await send_message("SEND MESSAGE " + std::to_string(activeChatId_) + "\n" + message.ToStdString(), socket_);
     std::string response = co_await read_response(socket_);
     inputField->SetLabelText("");
     CallAfter([this]() {
