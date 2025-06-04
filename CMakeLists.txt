@@ -29,7 +29,7 @@ include(${wxWidgets_USE_FILE})
 project ("Chepgram")
 
 # Добавьте источник в исполняемый файл этого проекта.
-add_executable (Chepgram "Chepgram.cpp" "Chepgram.h" "src/db/Database.h" "src/db/Database.cpp")
+add_executable (Chepgram "src/server/Chepgram.cpp" "src/server/Chepgram.h" "src/db/Database.h" "src/db/Database.cpp")
 add_executable (Chepgram_Client WIN32 "src/client/ClientMain.cpp" "src/client/ClientMain.h" "src/client/ClientApp.cpp" "src/client/ClientApp.h" "src/client/messagePanel.h" )
 
 target_link_libraries(Chepgram
