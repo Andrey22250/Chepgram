@@ -212,10 +212,32 @@ std::pair<bool, std::string> Database::createChatWithUser(int currentUserId, con
 
 //Отправка сообщения+
 bool Database::sendMessage(int chat_id, int sender_id, const std::string& content) {
-    std::string query =
-        "INSERT INTO \"Messages\" (chats_id, sender, content, timestamp) VALUES (" +
-        std::to_string(chat_id) + ", " + std::to_string(sender_id) + ", '" + content + "', 'NOW');";
-    PGresult* res = PQexec(conn, query.c_str());
+    const char* paramValues[3];
+    int paramLengths[3];
+    int paramFormats[3] = { 0, 0, 0 }; // текстовый формат
+    Oid paramTypes[3] = { 23, 23, 25 }; // 23 = INT4, 25 = TEXT
+
+    std::string chatIdStr = std::to_string(chat_id);
+    std::string senderIdStr = std::to_string(sender_id);
+
+    paramValues[0] = chatIdStr.c_str();
+    paramValues[1] = senderIdStr.c_str();
+    paramValues[2] = content.c_str();
+
+    paramLengths[0] = chatIdStr.length();
+    paramLengths[1] = senderIdStr.length();
+    paramLengths[2] = content.length();
+
+    PGresult* res = PQexecParams(
+        conn,
+        "INSERT INTO \"Messages\" (chats_id, sender, content, timestamp) VALUES ($1, $2, $3, NOW());",
+        3,              // количество параметров
+        paramTypes,     // типы параметров
+        paramValues,    // значения параметров
+        nullptr,        // длины строк (для текстовых параметров можно nullptr)
+        nullptr,        // формат (текстовый)
+        0               // результат в текстовом формате
+    );
 
     bool success = PQresultStatus(res) == PGRES_COMMAND_OK;
     PQclear(res);
@@ -237,7 +259,8 @@ std::string Database::getMessagesForChat(int chatId) {
         "    FROM \"Messages\" m "
         "    JOIN \"Users\" u ON m.sender = u.id "
         "    WHERE m.chats_id = " + std::to_string(chatId) + " "
-        "    ORDER BY m.timestamp DESC "
+        "    ORDER BY m.timestamp DESC"
+        "    LIMIT 50"
         ") sub "
         "ORDER BY timestamp ASC;";
 
